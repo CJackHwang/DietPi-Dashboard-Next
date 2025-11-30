@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use auth::SharedLoginMap;
 use flexible_hyper_server_tls::{HttpOrHttpsAcceptor, rustls_helpers};
 use hyper::service::service_fn;
@@ -47,7 +47,7 @@ impl HttpServer {
                     .await
                     .context("failed to build TlsAcceptor")?;
 
-            acceptor = acceptor.with_tls(tls)
+            acceptor = acceptor.with_tls(tls, true);
         }
 
         let logins = SharedLoginMap::new();
@@ -73,8 +73,10 @@ impl HttpServer {
 
             if let Ok((_, conn_fut)) = self.acceptor.accept(service).await {
                 tokio::spawn(async move {
-                    if let Err(err) = conn_fut.await {
-                        error!("Error serving HTTP connection: {err}");
+                    if let Err(err) = conn_fut.await
+                        && !err.ignorable()
+                    {
+                        error!("{:#?}", anyhow!(err));
                     }
                 });
             }

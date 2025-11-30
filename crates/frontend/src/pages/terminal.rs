@@ -44,6 +44,11 @@ pub async fn socket(req: ServerRequest) -> Result<ServerResponse, ServerResponse
                     let Some(Ok(data)) = data else {
                         break;
                     };
+
+                    if !matches!(data, Message::Text(_) | Message::Binary(_)) {
+                        continue;
+                    }
+
                     let data = data.into_data().to_vec();
 
                     let msg = ActionFrontendMessage::Terminal(data);

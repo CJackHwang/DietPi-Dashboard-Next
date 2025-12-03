@@ -96,7 +96,7 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
                     return msg;
                 }"} {}
                 @if let Some(update) = current_backend.update {
-                    li nm-bind="_: () => newMsg = true" { "DietPi Update Available: " (update) }
+                    li nm-bind="oninit: () => newMsg = true" { "DietPi Update Available: " (update) }
                 }
             }
         }
@@ -171,7 +171,7 @@ pub fn template(req: &ServerRequest, content: Markup) -> Result<ServerResponse, 
                 }
                 body
                     nm-data="navOpen: true, msgsOpen: false, newMsg: false,"
-                    nm-bind="className: () => `${navOpen ? '' : 'nav-closed'} ${msgsOpen ? 'msgs-open' : ''}`"
+                    nm-bind="'class.nav-closed': () => !navOpen, 'class.msgs-open': () => msgsOpen"
                 {
                     h1 { "DietPi Dashboard" }
 
@@ -180,8 +180,6 @@ pub fn template(req: &ServerRequest, content: Markup) -> Result<ServerResponse, 
                     (nav())
 
                     main nm-data {
-                        p nm-bind="textContent: () => nmError" {}
-
                         (content)
                     }
 

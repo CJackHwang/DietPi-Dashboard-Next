@@ -26,11 +26,11 @@
 
     cursor: pointer;
 
-    &[value="install"] {
+    &[data-action="install"] {
         background-color: var(--green-6);
     }
 
-    &[value="uninstall"] {
+    &[data-action="uninstall"] {
         background-color: var(--red-6);
     }
 

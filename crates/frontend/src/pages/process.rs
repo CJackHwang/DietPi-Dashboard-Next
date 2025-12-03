@@ -14,7 +14,7 @@ pub struct ProcessQuery {
     reverse: bool,
 }
 
-#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone, Copy, Default, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum ColumnSort {
     #[default]
@@ -32,14 +32,11 @@ fn table_header(name: &str, sort: ColumnSort, query: &ProcessQuery) -> Markup {
         false
     };
 
-    let new_query = ProcessQuery { sort, reverse };
-    let new_query = serde_urlencoded::to_string(&new_query).unwrap();
-
-    let url = format!("'/process?{new_query}'");
+    let sort_str = serde_plain::to_string(&sort).unwrap();
 
     html! {
-        th {
-            button nm-bind={ "onclick: () => get("(url)")" } {
+        th data-reverse=(reverse) data-sort=(sort_str) {
+            button nm-bind={ "onclick: () => $get('/process')" } {
                 (name)
                 @if query.sort == sort {
                     @if query.reverse {
@@ -70,11 +67,14 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
         processes.reverse();
     }
 
-    let query_str = serde_urlencoded::to_string(&query).unwrap();
-    let url = format!("'/process?{query_str}'",);
+    let sort_str = serde_plain::to_string(&query.sort).unwrap();
 
     let content = html! {
-        section #process-swap nm-bind={ "_: () => debounce(() => get("(url)"), 2000)" } {
+        section
+            #process-swap
+            data-reverse=(query.reverse) data-sort=(sort_str)
+            nm-bind="oninit: () => $debounce(() => $get('/process'), 2000)"
+        {
             h2 { "Processes" }
 
             table .process-table {
@@ -95,20 +95,20 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                         td { (format!("{:?}", proc.status)) }
                         td { (proc.cpu) "%" }
                         td { (pretty_mem) }
-                        td {
+                        td nm-data data-pid=(proc.pid) {
                             .actions-cell {
-                                button nm-bind={ "onclick: () => post('/process/signal?signal=kill&pid="(proc.pid)"')" } {
+                                button data-signal="kill" nm-bind="onclick: () => $post('/process/signal')" {
                                     (Icon::new("fa6-solid-skull"))
                                 }
-                                button nm-bind={ "onclick: () => post('/process/signal?signal=term&pid="(proc.pid)"')" } {
+                                button data-signal="term" nm-bind="onclick: () => $post('/process/signal')" {
                                     (Icon::new("fa6-solid-ban"))
                                 }
                                 @if proc.status == ProcessStatus::Paused {
-                                    button nm-bind={ "onclick: () => post('/process/signal?signal=resume&pid="(proc.pid)"')" } {
+                                    button data-signal="resume" nm-bind="onclick: () => $post('/process/signal')" {
                                         (Icon::new("fa6-solid-play"))
                                     }
                                 } @else {
-                                    button nm-bind={ "onclick: () => post('/process/signal?signal=pause&pid="(proc.pid)"')" } {
+                                    button data-signal="pause" nm-bind="onclick: () => $post('/process/signal')" {
                                         (Icon::new("fa6-solid-pause"))
                                     }
                                 }

@@ -49,15 +49,15 @@ fn software_table(list: &[SoftwareInfo], idx: u8, pretty_action: &str, action: &
                 }
                 br;
                 button .software-input
-                    value=(action)
+                    data-action=(action)
                     nm-bind="
-                        onclick: () => post('/software', { software: [...software.keys()].join(','), action: this.value }),
-                        disabled: () => nmFetching
+                        onclick: () => $post('/software', { software: [...software.keys()] }),
+                        disabled: () => _nmFetching
                     "
                 {
                     span .spinner { (Icon::new("svg-spinners-180-ring")) }
                     (pretty_action) " "
-                    span nm-bind="textContent: () => Array.from(software.values()).join(', ')" {}
+                    span nm-bind="textContent: () => [...software.values()].join(', ')" {}
                 }
             }
         }
@@ -142,7 +142,7 @@ pub async fn form(mut req: ServerRequest) -> Result<ServerResponse, ServerRespon
     let content = html! {
         (card(&data))
         br;
-        section #output nm-bind="_: () => this.scrollIntoView()" {
+        section #output nm-bind="oninit: () => this.scrollIntoView()" {
             h2 { "Install Summary" }
             pre {
                 (output)

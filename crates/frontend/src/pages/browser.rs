@@ -40,7 +40,7 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
     data.dir_list.sort_by(|a, b| a.path.cmp(&b.path));
 
     let content = html! {
-        #browser-swap nm-data="selectedRow: null, viewHidden: false" {
+        #browser-swap nm-data="_selectedRow: null, _viewHidden: false" {
             (path_display(&query.path))
 
             table #browser-inner {
@@ -59,9 +59,9 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                     };
                     @let pretty_size = item.size.map(|size| pretty_bytes(size, Some(0)).to_string()).unwrap_or_else(|| "--".into());
                     @let dblclick = match item.kind {
-                        FileKind::TextFile => "get('/browser/file', {path});",
-                        FileKind::Directory => "get('/browser', {path});",
-                        FileKind::BinaryFile => "window.open(`/browser/actions/download?path=${path}`)",
+                        FileKind::TextFile => "$get('/browser/file');",
+                        FileKind::Directory => "$get('/browser');",
+                        FileKind::BinaryFile => "window.open(`/browser/actions/download?path=${this.dataset.path}`)",
                         FileKind::Special => "",
                     };
                     tr
@@ -70,17 +70,15 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                         data-kind=(serde_plain::to_string(&item.kind).unwrap())
                         data-hidden[is_hidden]
                         nm-bind={"
-                            ariaCurrent: () => selectedRow === this,
+                            ariaCurrent: () => _selectedRow === this,
                             onclick: () => {
-                                let {currentPath, path, kind} = this.dataset;
-                                selectedRow = this;
-                                get('/browser/actions', {currentPath, path, kind})
+                                _selectedRow = this;
+                                $get('/browser/actions')
                             },
                             ondblclick: () => {
-                                let {path} = this.dataset;
                                 "(dblclick)"
                             },
-                            hidden: () => this.hasAttribute('data-hidden') && !viewHidden
+                            hidden: () => this.hasAttribute('data-hidden') && !_viewHidden
                         "}
                     {
                         td {
@@ -90,8 +88,8 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                     }
                 }
             }
-            #actions-list {
-                (default_actions(&query.path))
+            #actions-list data-path=(query.path) {
+                (default_actions())
             }
         }
     };
@@ -122,11 +120,7 @@ pub async fn file(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                 pre {}
             }
             #actions-list {
-                button title="Save" nm-bind={"
-                    onclick: () => {
-                        post('/browser/file/save', {path: '"(query.path)"', data});
-                    }
-                "} {
+                button data-path=(query.path) title="Save" nm-bind="onclick: () => $post('/browser/file/save')" {
                     (Icon::new("fa6-solid-floppy-disk"))
                 }
             }
@@ -151,7 +145,7 @@ fn path_display(path: &str) -> Markup {
                 @if paths.peek().is_none() {
                     span { (path_segment) }
                 } @else {
-                    button data-path=(full_path) nm-bind={"onclick: () => get('/browser', {path: this.dataset.path})"} { (path_segment) }
+                    button data-path=(full_path) nm-bind={"onclick: () => $get('/browser')"} { (path_segment) }
                 }
             }
         }
@@ -172,13 +166,13 @@ pub async fn actions(req: ServerRequest) -> Result<ServerResponse, ServerRespons
     let query: BrowserActionsQuery = req.extract_query()?;
 
     let content = html! {
-        div #actions-list {
-            (default_actions(&query.current_path))
+        div #actions-list data-path=(query.current_path) {
+            (default_actions())
             @if matches!(query.kind, FileKind::TextFile | FileKind::BinaryFile | FileKind::Directory) {
                 button title="Rename" nm-bind={"
                     onclick: () => {
                         let new_name = prompt('Enter a new name:');
-                        if (new_name) post('/browser/actions/rename', {
+                        if (new_name) $post('/browser/actions/rename', {
                             path: '"(query.path)"',
                             new_name
                         });
@@ -191,7 +185,7 @@ pub async fn actions(req: ServerRequest) -> Result<ServerResponse, ServerRespons
                 button title="Delete" nm-bind={"
                     onclick: () => { 
                         if (confirm('Are you sure you want to delete this file?'))
-                            post('/browser/actions/delete-file', {path: '"(query.path)"'});
+                            $post('/browser/actions/delete-file', {path: '"(query.path)"'});
                     }
                 "} { (Icon::new("fa6-solid-trash")) }
                 button title="Download" nm-bind={"
@@ -204,7 +198,7 @@ pub async fn actions(req: ServerRequest) -> Result<ServerResponse, ServerRespons
                 button title="Delete" nm-bind={"
                     onclick: () => { 
                         if (confirm('Are you sure you want to delete this folder?'))
-                            post('/browser/actions/delete-folder', {path: '"(query.path)"'});
+                            $post('/browser/actions/delete-folder', {path: '"(query.path)"'});
                     }
                 "} { (Icon::new("fa6-solid-trash")) }
             }
@@ -214,33 +208,33 @@ pub async fn actions(req: ServerRequest) -> Result<ServerResponse, ServerRespons
     template(&req, content)
 }
 
-fn default_actions(current_path: &str) -> Markup {
+fn default_actions() -> Markup {
     html! {
-        button title="Refresh" nm-bind={ "onclick: () => get('/browser', {path: '"(current_path)"'})" } {
+        button title="Refresh" nm-bind="onclick: () => $get('/browser')" {
             (Icon::new("fa6-solid-rotate"))
         }
         button title="Hide Hidden Files" nm-bind="
-            onclick: () => viewHidden = true,
-            hidden: () => viewHidden,
+            onclick: () => _viewHidden = true,
+            hidden: () => _viewHidden,
         " { (Icon::new("fa6-solid-eye")) }
         button title="Show Hidden Files" nm-bind="
-            onclick: () => viewHidden = false,
-            hidden: () => !viewHidden,
+            onclick: () => _viewHidden = false,
+            hidden: () => !_viewHidden,
         " { (Icon::new("fa6-solid-eye-slash")) }
         button title="New File" nm-bind={"
             onclick: () => { 
                 let name = prompt('Enter a file name:');
-                if (name) post('/browser/actions/new-file', {parent: '"(current_path)"', name});
+                if (name) $post('/browser/actions/new-file', {name});
             }
         "} { (Icon::new("fa6-solid-file-medical")) }
         button title="New Folder" nm-bind={"
             onclick: () => { 
                 let name = prompt('Enter a folder name:');
-                if (name) post('/browser/actions/new-folder', {parent: '"(current_path)"', name});
+                if (name) $post('/browser/actions/new-folder', {name});
             }
         "} { (Icon::new("fa6-solid-folder-plus")) }
         button title="Upload" onclick="this.firstChild.click()" {
-            input type="file" hidden nm-bind={"
+            input type="file" hidden nm-bind="
                 onchange: () => {
                     let file = this.files[0];
                     if (!file) return;
@@ -250,14 +244,13 @@ fn default_actions(current_path: &str) -> Markup {
                     reader.addEventListener('load', () => {
                         let data = reader.result.replace(/^data:.*;base64,/, '');
     
-                        post('/browser/actions/upload', {
-                            parent: '"(current_path)"',
+                        $post('/browser/actions/upload', {
                             name: file.name,
                             data
                         })
                     });
                 }
-            "};
+            ";
             (Icon::new("fa6-solid-file-arrow-up"))
         }
     }
@@ -265,7 +258,7 @@ fn default_actions(current_path: &str) -> Markup {
 
 #[derive(Deserialize)]
 pub struct NewQuery {
-    parent: String,
+    path: String,
     name: String,
 }
 
@@ -274,7 +267,7 @@ pub async fn new_file(mut req: ServerRequest) -> Result<ServerResponse, ServerRe
 
     let query: NewQuery = req.extract_form().await?;
 
-    let mut path = PathBuf::from(&query.parent);
+    let mut path = PathBuf::from(&query.path);
     path.push(query.name);
     let path = path.to_str().unwrap();
 
@@ -282,7 +275,7 @@ pub async fn new_file(mut req: ServerRequest) -> Result<ServerResponse, ServerRe
 
     Ok(ServerResponse::new().redirect(
         RedirectType::SeeOther,
-        &format!("/browser?path={}", query.parent),
+        &format!("/browser?path={}", query.path),
     ))
 }
 
@@ -292,14 +285,14 @@ pub async fn new_folder(mut req: ServerRequest) -> Result<ServerResponse, Server
     let query: NewQuery = req.extract_form().await?;
 
     // Path is guaranteed to be a valid string, because it was built from two strings
-    let path = Path::new(&query.parent).join(Path::new(&query.name));
+    let path = Path::new(&query.path).join(Path::new(&query.name));
     let path = path.into_os_string().into_string().unwrap();
 
     send_act!(req, NewFolder(path))?;
 
     Ok(ServerResponse::new().redirect(
         RedirectType::SeeOther,
-        &format!("/browser?path={}", query.parent),
+        &format!("/browser?path={}", query.path),
     ))
 }
 

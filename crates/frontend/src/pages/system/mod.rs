@@ -39,11 +39,11 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
     let mem_graph = fragments::mem_graph(&mem_data, &mut query.ram_points, &mut query.swap_points);
     let net_graph = fragments::net_graph(&net_data, &mut query.sent_points, &mut query.recv_points);
 
+    // Too complex to use nomini data attributes for
     let new_query = serde_urlencoded::to_string(&query).unwrap();
-    let url = format!("'/system?{new_query}'",);
 
     let content = html! {
-        div #system-swap .card-grid nm-bind={ "_: () => debounce(() => get("(url)"), 2000)" } {
+        div #system-swap .card-grid nm-bind={ "oninit: () => $debounce(() => $get('/system?" (new_query) "'), 2000)" } {
             (cpu_meters)
             (cpu_graph)
             @if let Some(temp_graph) = temp_graph {

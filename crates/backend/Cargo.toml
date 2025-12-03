@@ -11,7 +11,7 @@ config = { workspace = true, features = ["backend"] }
 log.workspace = true
 mime_guess = { version = "2.0.5", default-features = false }
 proto.workspace = true
-pty-process = { version = "0.5.1", features = ["async"] }
+pty-process = { version = "0.5.3", features = ["async"] }
 simple_logger.workspace = true
-sysinfo = { version = "0.37.0", default-features = false, features = ["system", "component", "disk", "network"] }
+sysinfo = { version = "0.37.2", default-features = false, features = ["system", "component", "disk", "network"] }
 tokio = { workspace = true, features = ["rt", "net", "sync", "macros", "time"] }

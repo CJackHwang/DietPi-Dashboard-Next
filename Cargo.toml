@@ -12,12 +12,12 @@ license = "GPL-3.0"
 config = { path = "./crates/config" }
 proto = { path = "./crates/proto" }
 
-anyhow = "1.0.93"
-bitcode = "0.6.3"
-log = { version = "0.4.22", features = ["serde"] }
-serde = { version = "1.0.210", features = ["derive"] }
-simple_logger = "5.0.0"
-tokio = "1.40.0"
+anyhow = "1.0.100"
+bitcode = "0.6.7"
+log = { version = "0.4.29", features = ["serde"] }
+serde = { version = "1.0.228", features = ["derive"] }
+simple_logger = "5.1.0"
+tokio = "1.48.0"
 
 [profile.release]
 panic = "abort"

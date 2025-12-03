@@ -1,26 +1,34 @@
 use anyhow::{Context, Result};
+use log::{error, info};
 use proto::backend::{ActionBackendMessage, BackendMessage};
-use pty_process::{Command, Pty, Size};
+use pty_process::{Command, Pts, Pty, Size};
+use tokio::process::Child;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     sync::mpsc,
 };
 
-fn create_pty() -> Result<Pty> {
+#[cfg(target_os = "linux")]
+fn spawn_agetty() -> Result<(Pty, Pts, Child)> {
     let (pty, pts) = pty_process::open().context("failed to open pty")?;
-    pty.resize(Size::new(24, 80))
-        .context("failed to resize pty")?;
+    pty.resize(Size::new(24, 80))?;
+    let mut cmd = Command::new("agetty").args(["-8", "-L", "-c", "-", "xterm-256color"]);
+    let child = cmd.spawn_borrowed(&pts).context("failed to spawn agetty")?;
+    Ok((pty, pts, child))
+}
 
-    let cmd = Command::new("agetty").args(["-8", "-L", "-", "xterm-256color"]);
-    cmd.spawn(pts).context("failed to spawn terminal")?;
-
-    Ok(pty)
+// This is purely so that I can build this on a Mac to develop
+#[cfg(not(target_os = "linux"))]
+fn spawn_agetty() -> Result<(Pty, Pts, Child)> {
+    anyhow::bail!("terminal only works on Linux targets");
 }
 
 pub struct Terminal {
     socket_tx: mpsc::UnboundedSender<BackendMessage>,
     rx: mpsc::UnboundedReceiver<Vec<u8>>,
     pty: Pty,
+    pts: Pts,
+    child: Child,
 }
 
 impl Terminal {
@@ -28,20 +36,26 @@ impl Terminal {
         socket_tx: mpsc::UnboundedSender<BackendMessage>,
         rx: mpsc::UnboundedReceiver<Vec<u8>>,
     ) -> Result<Self> {
-        let pty = create_pty()?;
+        let (pty, pts, child) = spawn_agetty()?;
 
-        Ok(Self { socket_tx, rx, pty })
+        Ok(Self {
+            socket_tx,
+            rx,
+            pty,
+            pts,
+            child,
+        })
     }
 
     pub async fn run(mut self) {
-        let mut buf = [0; 512];
+        let mut buf = [0; 4096];
 
         loop {
             loop {
                 tokio::select! {
                     data = self.rx.recv() => {
                         let Some(data): Option<Vec<u8>> = data else {
-                            break;
+                            return;
                         };
 
                         if self.pty.write_all(&data).await.is_err() {
@@ -62,8 +76,14 @@ impl Terminal {
 
                         let _ = self.socket_tx.send(msg);
                     }
+                    _ = self.child.wait() => {
+                        break;
+                    }
                 }
             }
+
+            drop(self.pty);
+            drop(self.pts);
 
             // Send escape sequence to clear terminal
             let _ = self
@@ -72,10 +92,16 @@ impl Terminal {
                     b"\x1Bc".to_vec(),
                 )));
 
-            if let Ok(pty) = create_pty() {
-                self.pty = pty;
-            } else {
-                break;
+            match spawn_agetty() {
+                Ok((pty, pts, child)) => {
+                    self.pty = pty;
+                    self.pts = pts;
+                    self.child = child
+                }
+                Err(err) => {
+                    error!("{err:#}");
+                    break;
+                }
             }
         }
     }

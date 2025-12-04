@@ -27,16 +27,40 @@ async function getUpdateMessage(oldVersion) {
     customElements.define(
         "web-terminal",
         class extends HTMLElement {
-            connectedCallback() {
+            async connectedCallback() {
                 const term = new Terminal();
+
+                const fitAddon = new FitAddon.FitAddon();
+                term.loadAddon(fitAddon);
+
                 term.open(this);
 
-                const socket = new WebSocket("/terminal/ws");
-                socket.binaryType = "arraybuffer";
+                fetch("/terminal/stream").then(async (res) => {
+                    for await (const chunk of res.body) {
+                        term.write(chunk)
+                    }
+                });
 
-                socket.onmessage = (e) => term.write(new Uint8Array(e.data));
+                term.onResize((dimensions) => {
+                    fetch("/terminal/resize", { method: "POST", body: new URLSearchParams(dimensions) });
+                });
 
-                term.onData((data) => socket.send(data));
+                fitAddon.fit()
+                window.addEventListener("resize", () => fitAddon.fit(), 50);
+
+                let sendTimeout = null;
+                let sendBuf = "";
+
+                // I would MUCH rather stream this, but that's not possible on HTTP/1.1 and doesn't work at all on Firefox
+                term.onData((data) => {
+                    clearTimeout(sendTimeout);
+                    sendBuf += data;
+                    // Short debounce to prevent excess requests
+                    sendTimeout = setTimeout(() => {
+                        fetch("/terminal/write", { method: "POST", body: sendBuf });
+                        sendBuf = "";
+                    }, 60);
+                });
             }
         }
     );

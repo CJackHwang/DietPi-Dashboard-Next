@@ -50,7 +50,7 @@ pub struct BackendContext {
     pub config: SharedConfig,
     pub system: SharedSystem,
     pub socket_tx: mpsc::UnboundedSender<BackendMessage>,
-    pub term_tx: mpsc::UnboundedSender<Vec<u8>>,
+    pub term_tx: mpsc::UnboundedSender<ActionFrontendMessage>,
 }
 
 impl BackendContext {
@@ -161,8 +161,9 @@ impl RequestHandler {
                 let _ = self.context.socket_tx.send(resp);
             }
             FrontendMessage::Action(msg) => match msg {
-                ActionFrontendMessage::Terminal(data) => {
-                    let _ = self.context.term_tx.send(data);
+                msg @ (ActionFrontendMessage::Terminal(_)
+                | ActionFrontendMessage::ResizeTerminal(_)) => {
+                    let _ = self.context.term_tx.send(msg);
                 }
                 ActionFrontendMessage::Signal(action) => {
                     tokio::task::spawn_blocking(|| actions::process_signal(ctx, action))

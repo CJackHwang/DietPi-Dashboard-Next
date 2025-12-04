@@ -34,6 +34,7 @@ pub enum ActionFrontendMessage {
     DeleteFile(String),
     DeleteFolder(String),
     Upload(UploadAction),
+    ResizeTerminal(TerminalDimensions),
 }
 
 #[derive(Debug, Encode, Decode, Deserialize)]
@@ -67,4 +68,10 @@ pub struct RenameAction {
 pub struct UploadAction {
     pub path: String,
     pub data: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Copy, Encode, Decode, Deserialize)]
+pub struct TerminalDimensions {
+    pub rows: u16,
+    pub cols: u16,
 }

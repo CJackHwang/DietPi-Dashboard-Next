@@ -51,7 +51,9 @@ pub async fn router(req: ServerRequest) -> Result<BuiltResponse, std::convert::I
         (GET, ["management"]) => management::page,
 
         (GET, ["terminal"]) => terminal::page,
-        (GET, ["terminal", "ws"]) => terminal::socket,
+        (GET, ["terminal", "stream"]) => terminal::stream,
+        (POST, ["terminal", "write"]) => terminal::write,
+        (POST, ["terminal", "resize"]) => terminal::resize,
 
         (GET, ["browser"]) => browser::page,
         (GET, ["browser", "file"]) => browser::file,

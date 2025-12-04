@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
-use log::{error, info};
+use log::error;
 use proto::backend::{ActionBackendMessage, BackendMessage};
+use proto::frontend::ActionFrontendMessage;
 use pty_process::{Command, Pts, Pty, Size};
 use tokio::process::Child;
 use tokio::{
@@ -25,7 +26,7 @@ fn spawn_agetty() -> Result<(Pty, Pts, Child)> {
 
 pub struct Terminal {
     socket_tx: mpsc::UnboundedSender<BackendMessage>,
-    rx: mpsc::UnboundedReceiver<Vec<u8>>,
+    rx: mpsc::UnboundedReceiver<ActionFrontendMessage>,
     pty: Pty,
     pts: Pts,
     child: Child,
@@ -34,7 +35,7 @@ pub struct Terminal {
 impl Terminal {
     pub fn new(
         socket_tx: mpsc::UnboundedSender<BackendMessage>,
-        rx: mpsc::UnboundedReceiver<Vec<u8>>,
+        rx: mpsc::UnboundedReceiver<ActionFrontendMessage>,
     ) -> Result<Self> {
         let (pty, pts, child) = spawn_agetty()?;
 
@@ -54,13 +55,24 @@ impl Terminal {
             loop {
                 tokio::select! {
                     data = self.rx.recv() => {
-                        let Some(data): Option<Vec<u8>> = data else {
+                        let Some(data) = data else {
                             return;
                         };
 
-                        if self.pty.write_all(&data).await.is_err() {
-                            break;
-                        }
+                        match data {
+                            ActionFrontendMessage::Terminal(data) => {
+                                if self.pty.write_all(&data).await.is_err() {
+                                    break;
+                                }
+                            }
+                            ActionFrontendMessage::ResizeTerminal(size) => {
+                                let size = Size::new(size.rows, size.cols);
+                                if self.pty.resize(size).is_err() {
+                                    break;
+                                }
+                            }
+                            _ => unreachable!()
+                        };
                     }
                     n = self.pty.read(&mut buf) => {
                         let Ok(n) = n else {

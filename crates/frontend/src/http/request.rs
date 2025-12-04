@@ -5,22 +5,17 @@ use std::{
 };
 
 use config::frontend::FrontendConfig;
-use data_encoding::BASE64;
 use http_body_util::BodyExt;
 use hyper::{
     StatusCode,
-    body::Incoming,
+    body::{Bytes, Incoming},
     header,
     http::request::Parts as RequestParts,
-    upgrade::{self, Upgraded},
 };
-use hyper_util::rt::TokioIo;
 use proto::{
     backend::ResponseBackendMessage,
     frontend::{ActionFrontendMessage, RequestFrontendMessage},
 };
-use ring::digest::SHA1_FOR_LEGACY_USE_ONLY;
-use tokio_tungstenite::{WebSocketStream, tungstenite::protocol::Role};
 
 use crate::backend::BackendHandle;
 
@@ -162,11 +157,7 @@ impl ServerRequest {
     pub async fn extract_form<T: serde::de::DeserializeOwned>(
         &mut self,
     ) -> Result<T, ServerResponse> {
-        let Some(body) = self.body.take() else {
-            return Err(ServerResponse::new()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("form already extracted"));
-        };
+        let body = self.extract_body().await?;
 
         let body = body.collect().await.map_err(|_| {
             ServerResponse::new()
@@ -181,64 +172,18 @@ impl ServerRequest {
         })
     }
 
-    pub fn is_fixi(&self) -> bool {
-        self.headers.contains_key("nm-request")
-    }
-
-    pub fn extract_websocket<F, Fut>(self, handler_fn: F) -> Result<ServerResponse, ServerResponse>
-    where
-        F: FnOnce(WebSocketStream<TokioIo<Upgraded>>) -> Fut + Send + 'static,
-        Fut: Future + Send,
-    {
-        const WEBSOCKET_MAGIC_NUM: &[u8] = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-
-        let check_header = |k, v: &[u8]| {
-            self.headers
-                .get(k)
-                .map(|x| x.as_bytes())
-                .is_some_and(|x| x.windows(v.len()).any(|subslice| subslice == v))
+    pub async fn extract_body(&mut self) -> Result<Incoming, ServerResponse> {
+        let Some(body) = self.body.take() else {
+            return Err(ServerResponse::new()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("form already extracted"));
         };
 
-        let is_websocket_req = check_header(header::CONNECTION, b"Upgrade")
-            && check_header(header::UPGRADE, b"websocket")
-            && check_header(header::SEC_WEBSOCKET_VERSION, b"13")
-            && self.headers.contains_key(header::SEC_WEBSOCKET_KEY);
+        Ok(body)
+    }
 
-        if !is_websocket_req {
-            return Err(ServerResponse::new()
-                .status(StatusCode::BAD_REQUEST)
-                .body("expected websocket upgrade"));
-        }
-
-        let sec_key = self
-            .headers
-            .get(header::SEC_WEBSOCKET_KEY)
-            .unwrap()
-            .as_bytes();
-
-        let resp_key = ring::digest::digest(
-            &SHA1_FOR_LEGACY_USE_ONLY,
-            &[sec_key, WEBSOCKET_MAGIC_NUM].concat(),
-        );
-        let resp_key = BASE64.encode(resp_key.as_ref());
-
-        let resp = ServerResponse::new()
-            .status(StatusCode::SWITCHING_PROTOCOLS)
-            .header(header::CONNECTION, "Upgrade")
-            .header(header::UPGRADE, "websocket")
-            .header(header::SEC_WEBSOCKET_ACCEPT, resp_key);
-
-        let req = hyper::Request::from_parts(self.parts, self.body.unwrap());
-
-        tokio::spawn(async {
-            if let Ok(stream) = upgrade::on(req).await {
-                let stream = TokioIo::new(stream);
-                let ws = WebSocketStream::from_raw_socket(stream, Role::Server, None).await;
-                handler_fn(ws).await;
-            }
-        });
-
-        Ok(resp)
+    pub fn is_fixi(&self) -> bool {
+        self.headers.contains_key("nm-request")
     }
 
     pub fn check_login(&self) -> Result<(), ServerResponse> {

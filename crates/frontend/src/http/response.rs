@@ -1,16 +1,19 @@
-use http_body_util::Full;
+use std::convert::Infallible;
+
+use futures_util::{Stream, StreamExt};
+use http_body_util::{Full, StreamBody, combinators::BoxBody};
 use hyper::{
     StatusCode,
-    body::Bytes,
+    body::{Bytes, Frame},
     header::{self, HeaderName, HeaderValue},
     http::response::Builder as ResponseBuilder,
 };
 
 pub struct ServerResponse {
     builder: ResponseBuilder,
-    body: Bytes,
+    body: BoxBody<Bytes, Infallible>,
 }
-pub type BuiltResponse = hyper::Response<Full<Bytes>>;
+pub type BuiltResponse = hyper::Response<BoxBody<Bytes, Infallible>>;
 
 pub enum RedirectType {
     Permanent,
@@ -21,7 +24,7 @@ impl ServerResponse {
     pub fn new() -> Self {
         Self {
             builder: ResponseBuilder::new(),
-            body: Bytes::new(),
+            body: BoxBody::default(),
         }
     }
 
@@ -51,13 +54,20 @@ impl ServerResponse {
     }
 
     pub fn body<T: Into<Bytes>>(mut self, body: T) -> Self {
-        self.body = body.into();
+        self.body = BoxBody::new(Full::new(body.into()));
+        self
+    }
+
+    pub fn stream_body<T: Stream<Item = I> + Send + Sync + 'static, I: Into<Bytes>>(
+        mut self,
+        stream: T,
+    ) -> Self {
+        let stream = stream.map(|x| Ok(Frame::data(x.into())));
+        self.body = BoxBody::new(StreamBody::new(stream));
         self
     }
 
     pub fn build(self) -> BuiltResponse {
-        let body = Full::from(self.body);
-
-        self.builder.body(body).unwrap()
+        self.builder.body(self.body).unwrap()
     }
 }

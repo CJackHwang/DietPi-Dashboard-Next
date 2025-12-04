@@ -34,8 +34,8 @@ mkdir -p "$dist_path"
 
 ./scripts/clean-css.bash "${css_assets[@]:1}" > "${css_assets[0]}"
 
-minify -b "${js_assets[@]}" | brotli -fo "$js_out"
-minify -b "${css_assets[@]}" | brotli -fo "$css_out"
+cat "${js_assets[@]}" | brotli -fo "$js_out"
+cat "${css_assets[@]}" | brotli -fo "$css_out"
 
 for svg in "${svg_assets[@]}"; do
   brotli "$svg" -fo "$dist_path/$(basename "$svg")"

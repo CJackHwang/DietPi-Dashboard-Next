@@ -34,11 +34,11 @@ mkdir -p "$dist_path"
 
 ./scripts/clean-css.bash "${css_assets[@]:1}" > "${css_assets[0]}"
 
-cat "${js_assets[@]}" | gzip -9c > "$js_out"
-cat "${css_assets[@]}" | gzip -9c > "$css_out"
+minify -b "${js_assets[@]}" | brotli -fo "$js_out"
+minify -b "${css_assets[@]}" | brotli -fo "$css_out"
 
 for svg in "${svg_assets[@]}"; do
-  gzip -9c "$svg" > "$dist_path/$(basename "$svg")"
+  brotli "$svg" -fo "$dist_path/$(basename "$svg")"
 done
 
 rm "${css_assets[0]}"

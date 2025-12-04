@@ -8,6 +8,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - name: Install minify
+        run: go install github.com/tdewolff/minify/v2/cmd/minify@latest
       - name: Build assets
         run: ./scripts/build-assets.bash
       - name: Lint (rustfmt)
@@ -35,6 +37,8 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cross
+      - name: Install minify
+        run: go install github.com/tdewolff/minify/v2/cmd/minify@latest
       - name: Build assets
         run: ./scripts/build-assets.bash
       - name: Build DietPi-Dashboard

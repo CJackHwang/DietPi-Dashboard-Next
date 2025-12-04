@@ -9,7 +9,7 @@ macro_rules! static_file {
 
             Ok(ServerResponse::new()
                 .header(header::CONTENT_TYPE, $mime)
-                .header(header::CONTENT_ENCODING, "gzip")
+                .header(header::CONTENT_ENCODING, "br")
                 .body(&file[..]))
         }
     };

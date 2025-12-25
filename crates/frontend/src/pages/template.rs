@@ -153,7 +153,11 @@ fn footer() -> Markup {
     }
 }
 
-pub fn template(req: &ServerRequest, content: Markup) -> Result<ServerResponse, ServerResponse> {
+pub fn template(
+    req: &ServerRequest,
+    content: Markup,
+    persistent_data: &str,
+) -> Result<ServerResponse, ServerResponse> {
     let page = if req.is_fixi() {
         content
     } else {
@@ -179,7 +183,7 @@ pub fn template(req: &ServerRequest, content: Markup) -> Result<ServerResponse, 
 
                     (nav())
 
-                    main nm-data {
+                    main nm-data=(persistent_data) {
                         (content)
                     }
 

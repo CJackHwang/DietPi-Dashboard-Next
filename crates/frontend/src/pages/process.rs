@@ -120,7 +120,7 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
         }
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }
 
 pub async fn signal(req: ServerRequest) -> Result<ServerResponse, ServerResponse> {

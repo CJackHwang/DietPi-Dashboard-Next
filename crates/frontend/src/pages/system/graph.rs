@@ -96,36 +96,45 @@ impl Render for SvgGraph {
         let axis = axis_ys.zip(self.axis.get_labels());
 
         html! {
-            svg .graph viewBox=(view_box) {
-                @for x in h_lines {
-                    line x1=(x) y1=(top_margin) x2=(x) y2=(y_end) {}
-                }
-                @for (y, val) in axis {
-                    text x="1" y=(y) { (val) }
-                }
-                @for y in v_lines {
-                    line x1=(left_margin) y1=(y) x2=(x_end) y2=(y) {}
-                }
-                @for series in &self.series {
-                    @let points = series.points.iter().map(|(x, y)| {
-                        (left_margin + (LINE_SPACING * x), y_end as f32 - y)
-                    });
-                    @let polyline_points = {
-                        use core::fmt::Write;
-
-                        let mut acc = String::new();
-                        for (x, y) in points.clone() {
-                            let _ = write!(acc, "{x},{y} ");
-                        }
-                        acc
-                    };
-                    g fill=(&series.color) {
-                        @for (x, y) in points {
-                            circle cx=(x) cy=(y) r="1.5" {}
-                        }
+            div
+                nm-bind="
+                    onmousemove: (e) => x = e.offsetX,
+                    onmouseleave: () => x = null
+                "
+                .graph-wrapper
+            {
+                svg .graph viewBox=(view_box) data-width=(total_width) {
+                    @for x in h_lines {
+                        line x1=(x) y1=(top_margin) x2=(x) y2=(y_end) {}
                     }
-                    polyline points=(polyline_points) stroke=(&series.color) fill="none" {}
+                    @for (y, val) in axis {
+                        text x="1" y=(y) { (val) }
+                    }
+                    @for y in v_lines {
+                        line x1=(left_margin) y1=(y) x2=(x_end) y2=(y) {}
+                    }
+                    @for series in &self.series {
+                        @let points = series.points.iter().map(|(x, y)| {
+                            (left_margin + (LINE_SPACING * x), y_end as f32 - y)
+                        });
+                        @let polyline_points = {
+                            use core::fmt::Write;
+
+                            let mut acc = String::new();
+                            for (x, y) in points.clone() {
+                                let _ = write!(acc, "{x},{y} ");
+                            }
+                            acc
+                        };
+                        g fill=(&series.color) {
+                            @for (x, y) in points {
+                                circle cx=(x) cy=(y) r="1.5" {}
+                            }
+                        }
+                        polyline points=(polyline_points) stroke=(&series.color) fill="none" {}
+                    }
                 }
+                div .ui-line nm-bind="'style.left': () => (x ?? 9999) + 'px'" {}
             }
         }
     }

@@ -94,7 +94,7 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
         }
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }
 
 pub async fn file(req: ServerRequest) -> Result<ServerResponse, ServerResponse> {
@@ -127,7 +127,7 @@ pub async fn file(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
         }
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }
 
 fn path_display(path: &str) -> Markup {
@@ -205,7 +205,7 @@ pub async fn actions(req: ServerRequest) -> Result<ServerResponse, ServerRespons
         }
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }
 
 fn default_actions() -> Markup {

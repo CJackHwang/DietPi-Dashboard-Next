@@ -27,7 +27,7 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
         }
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }
 
 #[derive(Deserialize)]

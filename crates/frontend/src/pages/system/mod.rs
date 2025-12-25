@@ -43,18 +43,18 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
     let new_query = serde_urlencoded::to_string(&query).unwrap();
 
     let content = html! {
-        div #system-swap .card-grid nm-bind={ "oninit: () => $debounce(() => $get('/system?" (new_query) "'), 2000)" } {
-            (cpu_meters)
-            (cpu_graph)
-            @if let Some(temp_graph) = temp_graph {
-                (temp_graph)
+            div #system-swap .card-grid nm-bind={ "oninit: () => $debounce(() => $get('/system?" (new_query) "'), 2000)" } {
+                (cpu_meters)
+                (cpu_graph)
+                @if let Some(temp_graph) = temp_graph {
+                    (temp_graph)
+                }
+                (mem_meters)
+                (mem_graph)
+                (disk_meters)
+                (net_graph)
             }
-            (mem_meters)
-            (mem_graph)
-            (disk_meters)
-            (net_graph)
-        }
     };
 
-    template(&req, content)
+    template(&req, content, "x: null")
 }

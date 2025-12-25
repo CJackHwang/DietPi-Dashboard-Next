@@ -63,8 +63,12 @@
 }
 
 .graph {
+    width: 100%;
+    height: 100%;
+
     line {
         stroke-width: 0.25;
+        opacity: .4;
         stroke: gray;
     }
 
@@ -74,6 +78,19 @@
         fill: light-dark(black, white);
         stroke: none;
     }
+}
+
+.graph-wrapper {
+    position: relative;
+    min-height: 0;
+}
+
+.ui-line {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border: 1.25px dashed light-dark(var(--gray-10, var(--gray-4)));
+    pointer-events: none;
 }
 
 .legend {

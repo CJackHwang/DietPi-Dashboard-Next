@@ -97,7 +97,7 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
         #output {}
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }
 
 #[derive(Deserialize)]
@@ -150,5 +150,5 @@ pub async fn form(mut req: ServerRequest) -> Result<ServerResponse, ServerRespon
         }
     };
 
-    template(&req, content)
+    template(&req, content, "")
 }

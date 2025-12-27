@@ -20,6 +20,12 @@ impl<I: Display> FromIterator<I> for QueryArray {
     }
 }
 
+impl Display for QueryArray {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 impl QueryArray {
     pub fn iter<I: FromStr>(&self) -> impl Iterator<Item = I> + Clone {
         self.0.split(',').filter_map(|x| x.parse().ok())

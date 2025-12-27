@@ -89,7 +89,7 @@
     position: absolute;
     top: 0;
     height: 100%;
-    border: 1.25px dashed light-dark(var(--gray-10, var(--gray-4)));
+    border: 1.25px dashed light-dark(var(--gray-10), var(--gray-4));
     pointer-events: none;
 }
 

@@ -2,7 +2,7 @@ use maud::{Markup, html};
 use pretty_bytes_typed::{pretty_bytes, pretty_bytes_binary};
 use proto::backend::{CpuResponse, DiskResponse, MemResponse, NetworkResponse, TempResponse};
 
-use crate::{http::query_array::QueryArray, pages::template::Icon};
+use crate::http::query_array::QueryArray;
 
 use super::graph::{Axis, SvgGraph};
 
@@ -54,7 +54,7 @@ pub fn cpu_graph(data: &CpuResponse, points: &mut QueryArray) -> Markup {
         .chain(points.iter())
         .take(20);
 
-    graph.add_series(points_iter.clone(), "var(--green-6)");
+    graph.add_series(points_iter.clone(), "var(--green-6)", "CPU");
 
     *points = points_iter.collect();
 
@@ -73,7 +73,7 @@ pub fn temp_graph(data: &TempResponse, points: &mut QueryArray) -> Option<Markup
 
         let points_iter = std::iter::once(temp).chain(points.iter()).take(20);
 
-        graph.add_series(points_iter.clone(), "light-dark(#000, #fff)");
+        graph.add_series(points_iter.clone(), "light-dark(#000, #fff)", "Temperature");
 
         *points = points_iter.collect();
 
@@ -130,8 +130,8 @@ pub fn mem_graph(
         .chain(swap_points.iter())
         .take(20);
 
-    graph.add_series(ram_points_iter.clone(), "var(--red-6)");
-    graph.add_series(swap_points_iter.clone(), "var(--blue-6)");
+    graph.add_series(ram_points_iter.clone(), "var(--red-6)", "RAM");
+    graph.add_series(swap_points_iter.clone(), "var(--blue-6)", "Swap");
 
     *ram_points = ram_points_iter.collect();
     *swap_points = swap_points_iter.collect();
@@ -140,16 +140,6 @@ pub fn mem_graph(
         section .span-3 {
             h2 { "Memory Graph" }
             (graph)
-            .legend {
-                p {
-                    span .ram { (Icon::new("fa6-solid-square").size(16)) }
-                    "RAM"
-                }
-                p {
-                    span .swap { (Icon::new("fa6-solid-square").size(16)) }
-                    "Swap"
-                }
-            }
         }
     }
 }
@@ -189,8 +179,8 @@ pub fn net_graph(
         .chain(recv_points.iter())
         .take(20);
 
-    graph.add_series(sent_points_iter.clone(), "var(--purple-6)");
-    graph.add_series(recv_points_iter.clone(), "var(--pink-6)");
+    graph.add_series(sent_points_iter.clone(), "var(--purple-6)", "Sent");
+    graph.add_series(recv_points_iter.clone(), "var(--pink-6)", "Received");
 
     *sent_points = sent_points_iter.collect();
     *recv_points = recv_points_iter.collect();
@@ -199,16 +189,6 @@ pub fn net_graph(
         section .span-3 {
             h2 { "Network Graph" }
             (graph)
-            .legend {
-                p {
-                    span .sent { (Icon::new("fa6-solid-square").size(16)) }
-                    "Bytes Sent"
-                }
-                p {
-                    span .recv { (Icon::new("fa6-solid-square").size(16)) }
-                    "Bytes Received"
-                }
-            }
         }
     }
 }

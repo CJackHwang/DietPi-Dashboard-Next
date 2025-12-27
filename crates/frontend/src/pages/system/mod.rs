@@ -11,12 +11,12 @@ mod graph;
 #[derive(Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SystemQuery {
-    cpu_points: QueryArray,
-    temp_points: QueryArray,
-    ram_points: QueryArray,
-    swap_points: QueryArray,
-    sent_points: QueryArray,
-    recv_points: QueryArray,
+    cpu: QueryArray,
+    temp: QueryArray,
+    ram: QueryArray,
+    swap: QueryArray,
+    sent: QueryArray,
+    recv: QueryArray,
 }
 
 pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> {
@@ -34,16 +34,21 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
     let mem_meters = fragments::mem_meters(&mem_data);
     let disk_meters = fragments::disk_meters(&disk_data);
 
-    let cpu_graph = fragments::cpu_graph(&cpu_data, &mut query.cpu_points);
-    let temp_graph = fragments::temp_graph(&temp_data, &mut query.temp_points);
-    let mem_graph = fragments::mem_graph(&mem_data, &mut query.ram_points, &mut query.swap_points);
-    let net_graph = fragments::net_graph(&net_data, &mut query.sent_points, &mut query.recv_points);
-
-    // Too complex to use nomini data attributes for
-    let new_query = serde_urlencoded::to_string(&query).unwrap();
+    let cpu_graph = fragments::cpu_graph(&cpu_data, &mut query.cpu);
+    let temp_graph = fragments::temp_graph(&temp_data, &mut query.temp);
+    let mem_graph = fragments::mem_graph(&mem_data, &mut query.ram, &mut query.swap);
+    let net_graph = fragments::net_graph(&net_data, &mut query.sent, &mut query.recv);
 
     let content = html! {
-            div #system-swap .card-grid nm-bind={ "oninit: () => $debounce(() => $get('/system?" (new_query) "'), 2000)" } {
+            div #system-swap .card-grid
+                nm-bind="oninit: () => $debounce(() => $get('/system'), 2000)"
+                data-cpu=(query.cpu)
+                data-ram=(query.ram)
+                data-swap=(query.swap)
+                data-temp=(query.temp)
+                data-sent=(query.sent)
+                data-recv=(query.recv)
+            {
                 (cpu_meters)
                 (cpu_graph)
                 @if let Some(temp_graph) = temp_graph {
@@ -56,5 +61,5 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
             }
     };
 
-    template(&req, content, "x: null")
+    template(&req, content, "x: null, idx: 0")
 }

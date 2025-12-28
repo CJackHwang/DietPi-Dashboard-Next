@@ -207,6 +207,14 @@ impl ServerRequest {
         Ok(())
     }
 
+    pub fn delete_login(&self) {
+        if self.config().enable_login
+            && let Some(token) = self.cookies.get("token")
+        {
+            self.context.logins.get().delete_token(token);
+        }
+    }
+
     pub fn extract_logins(&self) -> SharedLoginMap {
         self.context.logins.clone()
     }

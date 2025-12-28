@@ -3,3 +3,17 @@
         font-weight: var(--font-weight-medium);
     }
 }
+
+button.logout {
+    background-color: var(--red-8);
+    color: white;
+    font-size: var(--font-size-4);
+    padding: var(--size-2);
+    border-radius: var(--radius-lg);
+    border: none;
+
+    &:active {
+        color: var(--gray-2);
+        background-color: var(--red-10);
+    }
+}

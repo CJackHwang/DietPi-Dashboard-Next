@@ -35,6 +35,17 @@ impl LoginMap {
 
         self.0.contains_key(&bytes)
     }
+
+    pub fn delete_token(&mut self, token: &str) {
+        let Ok(bytes) = data_encoding::HEXLOWER.decode(token.as_bytes()) else {
+            return;
+        };
+        let Ok(bytes) = <[u8; 12]>::try_from(bytes) else {
+            return;
+        };
+
+        self.0.remove(&bytes);
+    }
 }
 
 #[derive(Clone)]

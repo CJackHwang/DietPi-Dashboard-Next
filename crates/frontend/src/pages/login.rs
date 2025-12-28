@@ -17,12 +17,12 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
 
     let content = html! {
         section {
-            h2 { "Login" }
+            h2 { "Login Form" }
 
             form method="POST" {
                 input name="pass" type="password" placeholder="Password" {}
                 br; br;
-                input type="submit" {}
+                button { "Login" }
             }
         }
     };
@@ -61,4 +61,16 @@ pub async fn form(mut req: ServerRequest) -> Result<ServerResponse, ServerRespon
     } else {
         Err(ServerResponse::new().redirect(RedirectType::SeeOther, "/login"))
     }
+}
+
+pub async fn logout(req: ServerRequest) -> Result<ServerResponse, ServerResponse> {
+    if !req.config().enable_login {
+        return Err(ServerResponse::new().redirect(RedirectType::SeeOther, "/"));
+    }
+
+    req.delete_login();
+
+    Ok(ServerResponse::new()
+        .redirect(RedirectType::SeeOther, "/login")
+        .header(header::SET_COOKIE, "token=; Max-Age=0; Path=/; HttpOnly"))
 }

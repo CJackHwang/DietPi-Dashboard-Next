@@ -1,5 +1,4 @@
 pub mod browser;
-pub mod config;
 pub mod login;
 pub mod management;
 pub mod process;

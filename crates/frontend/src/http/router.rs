@@ -37,6 +37,7 @@ pub async fn router(req: ServerRequest) -> Result<BuiltResponse, std::convert::I
 
         (GET, ["login"]) => login::page,
         (POST, ["login"]) => login::form,
+        (POST, ["logout"]) => login::logout,
 
         (GET, ["system"]) => system::page,
 
@@ -66,8 +67,6 @@ pub async fn router(req: ServerRequest) -> Result<BuiltResponse, std::convert::I
         (POST, ["browser", "actions", "delete-folder"]) => browser::delete_folder,
         (GET, ["browser", "actions", "download"]) => browser::download,
         (POST, ["browser", "actions", "upload"]) => browser::upload,
-
-        (GET, ["config"]) => config::page,
 
         _ => || { ServerResponse::new().status(StatusCode::NOT_FOUND).body("page not found") },
     });

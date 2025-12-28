@@ -134,10 +134,6 @@ fn nav() -> Markup {
                 (Icon::new("fa6-solid-folder"))
                 "File Browser"
             }
-            a href="/config" {
-                (Icon::new("fa6-solid-gear"))
-                "Config"
-            }
         }
     }
 }

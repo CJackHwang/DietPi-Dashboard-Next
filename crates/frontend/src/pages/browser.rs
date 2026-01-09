@@ -238,6 +238,8 @@ fn default_actions() -> Markup {
                 onchange: () => {
                     let file = this.files[0];
                     if (!file) return;
+
+                    const { path } = $dataset();
     
                     let reader = new FileReader();
                     reader.readAsDataURL(file);
@@ -246,7 +248,8 @@ fn default_actions() -> Markup {
     
                         $post('/browser/actions/upload', {
                             name: file.name,
-                            data
+                            data,
+                            path
                         })
                     });
                 }
@@ -399,7 +402,7 @@ pub async fn save(mut req: ServerRequest) -> Result<ServerResponse, ServerRespon
 #[derive(Deserialize)]
 pub struct UploadForm {
     name: String,
-    parent: String,
+    path: String,
     data: String,
 }
 
@@ -408,7 +411,7 @@ pub async fn upload(mut req: ServerRequest) -> Result<ServerResponse, ServerResp
 
     let query: UploadForm = req.extract_form().await?;
 
-    let mut path = PathBuf::from(&query.parent);
+    let mut path = PathBuf::from(&query.path);
     path.push(query.name);
     let path = path.to_str().unwrap();
 
@@ -426,6 +429,6 @@ pub async fn upload(mut req: ServerRequest) -> Result<ServerResponse, ServerResp
 
     Ok(ServerResponse::new().redirect(
         RedirectType::SeeOther,
-        &format!("/browser?path={}", query.parent),
+        &format!("/browser?path={}", query.path),
     ))
 }

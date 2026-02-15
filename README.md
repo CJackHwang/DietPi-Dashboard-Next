@@ -5,7 +5,7 @@ A downstream fork of DietPi-Dashboard focused on UX improvements and ongoing mai
 ## Upstream Relationship
 
 - Upstream project: [nonnorm/DietPi-Dashboard](https://github.com/nonnorm/DietPi-Dashboard)
-- This repository: [CJackHwang/DietPi-Dashboard](https://github.com/CJackHwang/DietPi-Dashboard)
+- This repository: [CJackHwang/DietPi-Dashboard-Next](https://github.com/CJackHwang/DietPi-Dashboard-Next)
 
 ## Installation
 
@@ -18,7 +18,7 @@ This fork publishes two binaries: `frontend` and `backend`.
 ```sh
 ARCH="${G_HW_ARCH_NAME:-x86_64}"
 ASSET="dietpi-dashboard-${ARCH}.tar.gz"
-URL="$(curl -sSf https://api.github.com/repos/CJackHwang/DietPi-Dashboard/releases/latest \
+URL="$(curl -sSf https://api.github.com/repos/CJackHwang/DietPi-Dashboard-Next/releases/latest \
   | mawk -F\" "/\"browser_download_url\": \".*dietpi-dashboard-${ARCH}\\.tar\\.gz\"/{print \\$4; exit}")"
 
 curl -fL "$URL" -o "$ASSET"
@@ -43,8 +43,8 @@ cargo install just
 #### Build and Run
 
 ```sh
-git clone https://github.com/CJackHwang/DietPi-Dashboard
-cd DietPi-Dashboard
+git clone https://github.com/CJackHwang/DietPi-Dashboard-Next
+cd DietPi-Dashboard-Next
 cargo build --release -p frontend -p backend
 ./target/release/frontend &
 ./target/release/backend

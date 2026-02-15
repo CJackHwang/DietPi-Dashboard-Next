@@ -1,5 +1,5 @@
 use hyper::header;
-use maud::{DOCTYPE, Markup, Render, html};
+use maud::{DOCTYPE, Markup, PreEscaped, Render, html};
 
 use crate::http::{
     request::{BackendData, ServerRequest},
@@ -70,18 +70,16 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
 
             span .theme-switch nm-data="isDark: localStorage.getItem('darkMode') === 'true'" nm-bind="
                 oninit: () => {
-                    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+                    const theme = isDark ? 'dark' : 'light';
+                    window.__setDashboardTheme?.(theme);
                 }
             " {
-                meta
-                    name="color-scheme"
-                    nm-bind="content: () => isDark ? 'dark' : 'light'"
-                {}
                 button .theme-toggle nm-bind="
                     onclick: () => {
                         isDark = !isDark;
                         localStorage.setItem('darkMode', isDark);
-                        document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+                        const theme = isDark ? 'dark' : 'light';
+                        window.__setDashboardTheme?.(theme);
                     }
                 " {
                     span nm-bind="hidden: () => isDark" {
@@ -112,7 +110,13 @@ fn nav(req: &ServerRequest) -> Markup {
     let current_page = req.path_segments().next().unwrap_or("system");
 
     html! {
-        nav #nav {
+        nav #nav nm-bind="
+            onclick: (e) => {
+                if (window.matchMedia('(max-width: 980px)').matches && e.target.closest('a')) {
+                    navOpen = false;
+                }
+            }
+        " {
             a href="/system" class=(if current_page == "system" { "active" } else { "" }) aria-current=(if current_page == "system" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-gauge"))
                 "System"
@@ -173,18 +177,60 @@ pub fn template(
 
                     title { "DietPi Dashboard" }
 
+                    script {
+                        (PreEscaped(r#"
+                            (() => {
+                                const root = document.documentElement;
+                                const setTheme = (theme) => {
+                                    root.dataset.theme = theme;
+                                    root.style.colorScheme = theme;
+
+                                    let meta = document.querySelector('meta[name="color-scheme"]');
+                                    if (!meta) {
+                                        meta = document.createElement('meta');
+                                        meta.name = 'color-scheme';
+                                        document.head.append(meta);
+                                    }
+                                    meta.content = theme;
+                                };
+
+                                window.__setDashboardTheme = setTheme;
+                                let isDark = false;
+                                try {
+                                    isDark = localStorage.getItem('darkMode') === 'true';
+                                } catch (_) {}
+                                setTheme(isDark ? 'dark' : 'light');
+                            })();
+                        "#))
+                    }
+
                     link rel="icon" href="/favicon.svg" type="image/svg+xml";
                     link rel="stylesheet" href="/static/main.css";
                 }
                 body
                     nm-data="navOpen: window.matchMedia('(min-width: 981px)').matches, msgsOpen: false, newMsg: false,"
-                    nm-bind="'class.nav-closed': () => !navOpen, 'class.msgs-open': () => msgsOpen"
+                    nm-bind="
+                        oninit: () => {
+                            const media = window.matchMedia('(max-width: 980px)');
+                            media.addEventListener('change', () => {
+                                navOpen = !media.matches;
+                                msgsOpen = false;
+                            });
+                        },
+                        'class.nav-closed': () => !navOpen,
+                        'class.nav-open': () => navOpen,
+                        'class.msgs-open': () => msgsOpen
+                    "
                 {
                     h1 { "DietPi Dashboard" }
 
                     (header(req)?)
 
                     (nav(req))
+                    button #nav-overlay type="button" aria-label="Close navigation" nm-bind="
+                        hidden: () => !navOpen,
+                        onclick: () => navOpen = false
+                    " {}
 
                     main nm-data=(persistent_data) {
                         (content)

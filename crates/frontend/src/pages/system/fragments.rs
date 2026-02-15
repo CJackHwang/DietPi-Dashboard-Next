@@ -16,19 +16,11 @@ fn calc_percent(used: u64, total: u64) -> f32 {
     (percent * 100.).round() / 100.
 }
 
-fn calc_grid_span(num_elts: usize) -> usize {
-    // Starting at two rows, we need roughly 1 row for every 2 elements
-    num_elts.div_ceil(2) + 1
-}
-
 pub fn cpu_meters(cpu_data: &CpuResponse, temp_data: &TempResponse) -> Markup {
     let cpu_iter = cpu_data.cpus.iter().zip(1_u8..);
 
-    // Add 1 row to account for CPU temperature and global CPU
-    let span = calc_grid_span(cpu_data.cpus.len()) + 1;
-
     html! {
-        section .{"span-" (span)} {
+        section {
             h2 { "CPU Statistics" }
             @if let Some(temp) = temp_data.temp {
                 p { "CPU Temperature: " (format!("{temp:.1}")) "ºC" }
@@ -59,8 +51,7 @@ pub fn cpu_graph(data: &CpuResponse, points: &mut QueryArray) -> Markup {
     *points = points_iter.collect();
 
     html! {
-        section .span-3
-        {
+        section {
             h2 { "CPU Graph" }
             (graph)
         }
@@ -78,11 +69,10 @@ pub fn temp_graph(data: &TempResponse, points: &mut QueryArray) -> Option<Markup
         *points = points_iter.collect();
 
         html! {
-                section .span-3
-                {
-                    h2 { "Temperature Graph" }
-                    (graph)
-                }
+            section {
+                h2 { "Temperature Graph" }
+                (graph)
+            }
         }
     })
 }
@@ -97,7 +87,7 @@ pub fn mem_meters(data: &MemResponse) -> Markup {
     let swap_percent = calc_percent(data.swap.used, data.swap.total);
 
     html! {
-        section .span-2 {
+        section {
             h2 { "Memory Usage" }
 
             p { "RAM Usage: " (pretty_ram_used) " / " (pretty_ram_total) }
@@ -137,7 +127,7 @@ pub fn mem_graph(
     *swap_points = swap_points_iter.collect();
 
     html! {
-        section .span-3 {
+        section {
             h2 { "Memory Graph" }
             (graph)
         }
@@ -145,10 +135,8 @@ pub fn mem_graph(
 }
 
 pub fn disk_meters(data: &DiskResponse) -> Markup {
-    let span = calc_grid_span(data.disks.len());
-
     html! {
-        section .{"span-" (span)} {
+        section {
             h2 { "Disk Usage" }
 
             @for disk in &data.disks {
@@ -186,7 +174,7 @@ pub fn net_graph(
     *recv_points = recv_points_iter.collect();
 
     html! {
-        section .span-3 {
+        section {
             h2 { "Network Graph" }
             (graph)
         }

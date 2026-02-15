@@ -88,8 +88,8 @@
 
     --content-max-width: 1320px;
     --transition-ease: cubic-bezier(0.2, 0.72, 0.24, 1);
-    --transition-fast: 180ms var(--transition-ease);
-    --transition-base: 280ms var(--transition-ease);
+    --transition-fast: 120ms var(--transition-ease);
+    --transition-base: 180ms var(--transition-ease);
     --focus-ring: 0 0 0 3px light-dark(rgba(22, 33, 52, 0.16), rgba(230, 236, 255, 0.28));
 }
 

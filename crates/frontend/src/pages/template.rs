@@ -152,8 +152,11 @@ fn nav(req: &ServerRequest) -> Markup {
 fn footer() -> Markup {
     html! {
         footer {
-            "DietPi Dashboard v" (config::APP_VERSION) " by ravenclaw900 - WebUI Design by CJackHwang"
-            a href="https://github.com/ravenclaw900/DietPi-Dashboard" target="_blank" {
+            "DietPi Dashboard v" (config::APP_VERSION) " by "
+            a href="https://github.com/ravenclaw900" target="_blank" rel="noopener noreferrer" { "ravenclaw900" }
+            " - WebUI Design by "
+            a href="https://github.com/CJackHwang" target="_blank" rel="noopener noreferrer" { "CJackHwang" }
+            a href="https://github.com/ravenclaw900/DietPi-Dashboard" target="_blank" rel="noopener noreferrer" title="DietPi-Dashboard Repository" {
                 (Icon::new("cib-github").size(32))
             }
         }

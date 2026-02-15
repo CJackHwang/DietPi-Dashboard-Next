@@ -64,7 +64,7 @@ pub fn temp_graph(data: &TempResponse, points: &mut QueryArray) -> Option<Markup
 
         let points_iter = std::iter::once(temp).chain(points.iter()).take(20);
 
-        graph.add_series(points_iter.clone(), "var(--gray-9)", "Temperature");
+        graph.add_series(points_iter.clone(), "var(--red-6)", "Temperature");
 
         *points = points_iter.collect();
 
@@ -120,8 +120,8 @@ pub fn mem_graph(
         .chain(swap_points.iter())
         .take(20);
 
-    graph.add_series(ram_points_iter.clone(), "var(--gray-11)", "RAM");
-    graph.add_series(swap_points_iter.clone(), "var(--gray-7)", "Swap");
+    graph.add_series(ram_points_iter.clone(), "var(--gray-12)", "RAM");
+    graph.add_series(swap_points_iter.clone(), "var(--blue-6)", "Swap");
 
     *ram_points = ram_points_iter.collect();
     *swap_points = swap_points_iter.collect();
@@ -167,8 +167,8 @@ pub fn net_graph(
         .chain(recv_points.iter())
         .take(20);
 
-    graph.add_series(sent_points_iter.clone(), "var(--gray-10)", "Sent");
-    graph.add_series(recv_points_iter.clone(), "var(--gray-6)", "Received");
+    graph.add_series(sent_points_iter.clone(), "var(--gray-12)", "Sent");
+    graph.add_series(recv_points_iter.clone(), "var(--yellow-6)", "Received");
 
     *sent_points = sent_points_iter.collect();
     *recv_points = recv_points_iter.collect();

@@ -40,6 +40,10 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
     Ok(html! {
         header {
             button .nav-toggle
+                title="Toggle navigation"
+                aria-label="Toggle navigation"
+                data-i18n-title="toggle_navigation"
+                data-i18n-aria-label="toggle_navigation"
                 aria-controls="nav"
                 nm-bind="onclick: () => navOpen = !navOpen, ariaExpanded: () => navOpen"
             {
@@ -71,6 +75,10 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
             { "EN" }
 
             button .msg-btn
+                title="Messages"
+                aria-label="Messages"
+                data-i18n-title="messages"
+                data-i18n-aria-label="messages"
                 aria-controls="msgs"
                 nm-bind="onclick: () => msgsOpen = !msgsOpen, ariaExpanded: () => msgsOpen"
             {
@@ -84,7 +92,12 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
                     window.__setDashboardTheme?.(theme);
                 }
             " {
-                button .theme-toggle nm-bind="
+                button .theme-toggle
+                    title="Toggle theme"
+                    aria-label="Toggle theme"
+                    data-i18n-title="toggle_theme"
+                    data-i18n-aria-label="toggle_theme"
+                    nm-bind="
                     onclick: () => {
                         isDark = !isDark;
                         localStorage.setItem('darkMode', isDark);
@@ -109,7 +122,11 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
                     return msg;
                 }"} {}
                 @if let Some(update) = current_backend.update {
-                    li nm-bind="oninit: () => newMsg = true" { "DietPi Update Available: " (update) }
+                    li
+                        nm-bind="oninit: () => newMsg = true"
+                        data-i18n-template="dietpi_update_available"
+                        data-version=(update)
+                    { "DietPi Update Available: " (update) }
                 }
             }
         }
@@ -166,12 +183,12 @@ fn footer() -> Markup {
                 span data-i18n="footer_product" { "DietPi Dashboard" }
                 span { " v" (config::APP_VERSION) }
                 span data-i18n="footer_by" { "by" }
-                a href="https://github.com/ravenclaw900" target="_blank" rel="noopener noreferrer" { "ravenclaw900" }
+                a href="https://github.com/nonnorm" target="_blank" rel="noopener noreferrer" { "ravenclaw900" }
                 span .footer-sep { "·" }
                 span data-i18n="footer_design_by" { "WebUI Design by" }
                 a href="https://github.com/CJackHwang" target="_blank" rel="noopener noreferrer" { "CJackHwang" }
             }
-            a .footer-repo href="https://github.com/ravenclaw900/DietPi-Dashboard" target="_blank" rel="noopener noreferrer" title="DietPi-Dashboard Repository" data-i18n-title="footer_repo_title" {
+            a .footer-repo href="https://github.com/nonnorm/DietPi-Dashboard" target="_blank" rel="noopener noreferrer" title="DietPi-Dashboard Repository" data-i18n-title="footer_repo_title" {
                 (Icon::new("cib-github").size(32))
             }
         }

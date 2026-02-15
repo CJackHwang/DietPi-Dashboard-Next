@@ -21,7 +21,7 @@ pub fn cpu_meters(cpu_data: &CpuResponse, temp_data: &TempResponse) -> Markup {
 
     html! {
         section {
-            h2 { "CPU Statistics" }
+            h2 data-i18n="cpu_statistics" { "CPU Statistics" }
             @if let Some(temp) = temp_data.temp {
                 p { "CPU Temperature: " (format!("{temp:.1}")) "ºC" }
             }
@@ -46,13 +46,13 @@ pub fn cpu_graph(data: &CpuResponse, points: &mut QueryArray) -> Markup {
         .chain(points.iter())
         .take(20);
 
-    graph.add_series(points_iter.clone(), "var(--gray-12)", "CPU");
+    graph.add_series(points_iter.clone(), "var(--gray-12)", "CPU", "cpu");
 
     *points = points_iter.collect();
 
     html! {
         section {
-            h2 { "CPU Graph" }
+            h2 data-i18n="cpu_graph" { "CPU Graph" }
             (graph)
         }
     }
@@ -64,13 +64,13 @@ pub fn temp_graph(data: &TempResponse, points: &mut QueryArray) -> Option<Markup
 
         let points_iter = std::iter::once(temp).chain(points.iter()).take(20);
 
-        graph.add_series(points_iter.clone(), "var(--red-6)", "Temperature");
+        graph.add_series(points_iter.clone(), "var(--red-6)", "Temperature", "temperature");
 
         *points = points_iter.collect();
 
         html! {
             section {
-                h2 { "Temperature Graph" }
+                h2 data-i18n="temperature_graph" { "Temperature Graph" }
                 (graph)
             }
         }
@@ -88,7 +88,7 @@ pub fn mem_meters(data: &MemResponse) -> Markup {
 
     html! {
         section {
-            h2 { "Memory Usage" }
+            h2 data-i18n="memory_usage" { "Memory Usage" }
 
             p { "RAM Usage: " (pretty_ram_used) " / " (pretty_ram_total) }
             div .meter-container {
@@ -120,15 +120,15 @@ pub fn mem_graph(
         .chain(swap_points.iter())
         .take(20);
 
-    graph.add_series(ram_points_iter.clone(), "var(--gray-12)", "RAM");
-    graph.add_series(swap_points_iter.clone(), "var(--blue-6)", "Swap");
+    graph.add_series(ram_points_iter.clone(), "var(--gray-12)", "RAM", "ram");
+    graph.add_series(swap_points_iter.clone(), "var(--blue-6)", "Swap", "swap");
 
     *ram_points = ram_points_iter.collect();
     *swap_points = swap_points_iter.collect();
 
     html! {
         section {
-            h2 { "Memory Graph" }
+            h2 data-i18n="memory_graph" { "Memory Graph" }
             (graph)
         }
     }
@@ -137,7 +137,7 @@ pub fn mem_graph(
 pub fn disk_meters(data: &DiskResponse) -> Markup {
     html! {
         section {
-            h2 { "Disk Usage" }
+            h2 data-i18n="disk_usage" { "Disk Usage" }
 
             @for disk in &data.disks {
                 @let pretty_disk_used = pretty_bytes(disk.usage.used, Some(2));
@@ -167,15 +167,15 @@ pub fn net_graph(
         .chain(recv_points.iter())
         .take(20);
 
-    graph.add_series(sent_points_iter.clone(), "var(--gray-12)", "Sent");
-    graph.add_series(recv_points_iter.clone(), "var(--yellow-6)", "Received");
+    graph.add_series(sent_points_iter.clone(), "var(--gray-12)", "Sent", "sent");
+    graph.add_series(recv_points_iter.clone(), "var(--yellow-6)", "Received", "received");
 
     *sent_points = sent_points_iter.collect();
     *recv_points = recv_points_iter.collect();
 
     html! {
         section {
-            h2 { "Network Graph" }
+            h2 data-i18n="network_graph" { "Network Graph" }
             (graph)
         }
     }

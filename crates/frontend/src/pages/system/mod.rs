@@ -104,25 +104,25 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                 data-recv=(query.recv)
             {
                 section #system-overview {
-                    h2 { "System Overview" }
+                    h2 data-i18n="system_overview" { "System Overview" }
                     .kpi-grid {
                         article .kpi-card {
-                            p .kpi-label { "CPU Load" }
+                            p .kpi-label data-i18n="cpu_load" { "CPU Load" }
                             p .kpi-value { (format!("{:.1}%", cpu_data.global_cpu)) }
-                            p .kpi-sub { "Temperature: " (temp_display) }
+                            p .kpi-sub data-i18n-template="temperature_value" data-value=(temp_display) { "Temperature: " (temp_display) }
                         }
                         article .kpi-card {
-                            p .kpi-label { "Memory" }
+                            p .kpi-label data-i18n="memory_label" { "Memory" }
                             p .kpi-value { (format!("{ram_percent:.1}%")) }
                             p .kpi-sub { (ram_usage) }
                         }
                         article .kpi-card {
-                            p .kpi-label { "Swap" }
+                            p .kpi-label data-i18n="swap_label" { "Swap" }
                             p .kpi-value { (format!("{swap_percent:.1}%")) }
-                            p .kpi-sub { "Pressure monitor" }
+                            p .kpi-sub data-i18n="pressure_monitor" { "Pressure monitor" }
                         }
                         article .kpi-card {
-                            p .kpi-label { "Peak Disk" }
+                            p .kpi-label data-i18n="peak_disk" { "Peak Disk" }
                             p .kpi-value { (peak_disk_display) }
                             p .kpi-sub { (net_usage) }
                         }

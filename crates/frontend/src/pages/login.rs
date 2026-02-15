@@ -17,11 +17,16 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
 
     let content = html! {
         section #login-card {
-            h2 { "Login Form" }
+            h2 data-i18n="login_form_title" { "Login Form" }
 
             form .login-form method="POST" {
-                input name="pass" type="password" placeholder="Password" {}
-                button .primary-btn { "Login" }
+                input
+                    name="pass"
+                    type="password"
+                    placeholder="Password"
+                    data-i18n-placeholder="password_placeholder"
+                {}
+                button .primary-btn data-i18n="login" { "Login" }
             }
         }
     };

@@ -23,14 +23,17 @@ pub fn cpu_meters(cpu_data: &CpuResponse, temp_data: &TempResponse) -> Markup {
         section {
             h2 data-i18n="cpu_statistics" { "CPU Statistics" }
             @if let Some(temp) = temp_data.temp {
-                p { "CPU Temperature: " (format!("{temp:.1}")) "ºC" }
+                @let temp_text = format!("{temp:.1}ºC");
+                p data-i18n-template="cpu_temperature_value" data-value=(temp_text) { "CPU Temperature: " (format!("{temp:.1}")) "ºC" }
             }
-            p { "Global CPU: " (format!("{:.1}", cpu_data.global_cpu)) "%" }
+            @let global_cpu_text = format!("{:.1}%", cpu_data.global_cpu);
+            p data-i18n-template="global_cpu_value" data-value=(global_cpu_text) { "Global CPU: " (format!("{:.1}", cpu_data.global_cpu)) "%" }
             .meter-container {
                 .bar.cpu style={"--scale:"(cpu_data.global_cpu / 100.)} {}
             }
             @for (usage, num) in cpu_iter {
-                p { "CPU "(num)": " (format!("{usage:.1}")) "%" }
+                @let core_cpu_text = format!("{usage:.1}%");
+                p data-i18n-template="cpu_core_usage" data-core=(num) data-value=(core_cpu_text) { "CPU "(num)": " (format!("{usage:.1}")) "%" }
                 .meter-container {
                     .bar.cpu style={"--scale:"(usage / 100.)} {}
                 }
@@ -90,12 +93,14 @@ pub fn mem_meters(data: &MemResponse) -> Markup {
         section {
             h2 data-i18n="memory_usage" { "Memory Usage" }
 
-            p { "RAM Usage: " (pretty_ram_used) " / " (pretty_ram_total) }
+            @let ram_usage_text = format!("{pretty_ram_used} / {pretty_ram_total}");
+            p data-i18n-template="ram_usage_value" data-value=(ram_usage_text) { "RAM Usage: " (pretty_ram_used) " / " (pretty_ram_total) }
             div .meter-container {
                 div .bar.ram style={"--scale:"(ram_percent / 100.)} {}
             }
 
-            p { "Swap Usage: " (pretty_swap_used) " / " (pretty_swap_total) }
+            @let swap_usage_text = format!("{pretty_swap_used} / {pretty_swap_total}");
+            p data-i18n-template="swap_usage_value" data-value=(swap_usage_text) { "Swap Usage: " (pretty_swap_used) " / " (pretty_swap_total) }
             div .meter-container {
                 div .bar.swap style={"--scale:"(swap_percent / 100.)} {}
             }
@@ -121,7 +126,7 @@ pub fn mem_graph(
         .take(20);
 
     graph.add_series(ram_points_iter.clone(), "var(--gray-12)", "RAM", "ram");
-    graph.add_series(swap_points_iter.clone(), "var(--blue-6)", "Swap", "swap");
+    graph.add_series(swap_points_iter.clone(), "var(--red-6)", "Swap", "swap");
 
     *ram_points = ram_points_iter.collect();
     *swap_points = swap_points_iter.collect();
@@ -143,8 +148,9 @@ pub fn disk_meters(data: &DiskResponse) -> Markup {
                 @let pretty_disk_used = pretty_bytes(disk.usage.used, Some(2));
                 @let pretty_disk_total = pretty_bytes(disk.usage.total, Some(2));
                 @let disk_percent = calc_percent(disk.usage.used, disk.usage.total);
+                @let disk_usage_text = format!("{pretty_disk_used} / {pretty_disk_total}");
 
-                p { (disk.name) " (" (disk.mnt_point) "): " (pretty_disk_used) " / " (pretty_disk_total) }
+                p data-i18n-template="disk_usage_value" data-name=(disk.name) data-mount=(disk.mnt_point) data-value=(disk_usage_text) { (disk.name) " (" (disk.mnt_point) "): " (pretty_disk_used) " / " (pretty_disk_total) }
                 .meter-container {
                     .bar.disk style={"--scale:"(disk_percent / 100.)} {}
                 }
@@ -168,7 +174,7 @@ pub fn net_graph(
         .take(20);
 
     graph.add_series(sent_points_iter.clone(), "var(--gray-12)", "Sent", "sent");
-    graph.add_series(recv_points_iter.clone(), "var(--yellow-6)", "Received", "received");
+    graph.add_series(recv_points_iter.clone(), "var(--red-6)", "Received", "received");
 
     *sent_points = sent_points_iter.collect();
     *recv_points = recv_points_iter.collect();

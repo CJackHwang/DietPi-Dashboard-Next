@@ -170,7 +170,18 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                 }
             }
 
-            .process-table-wrap {
+            .process-table-wrap nm-bind="
+                oninit: () => {
+                    const key = `process-scroll:${window.location.search}`;
+                    const [top = '0', left = '0'] = (sessionStorage.getItem(key) || '0,0').split(',');
+                    this.scrollTop = Number(top);
+                    this.scrollLeft = Number(left);
+                },
+                onscroll: () => {
+                    const key = `process-scroll:${window.location.search}`;
+                    sessionStorage.setItem(key, `${this.scrollTop},${this.scrollLeft}`);
+                }
+            " {
                 table .process-table nm-bind="'class.dense': () => denseRows" {
                     tr {
                         (table_header("PID", ColumnSort::Pid, &query))
@@ -190,8 +201,9 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                             @let (status_attr, status_label) = process_status(proc.status);
 
                             tr {
+                                @let proc_name = proc.name.as_str();
                                 td { (proc.pid) }
-                                td { (proc.name) }
+                                td { span .process-name title=(proc_name) { (proc_name) } }
                                 td {
                                     span .status-badge data-status=(status_attr) { (status_label) }
                                 }

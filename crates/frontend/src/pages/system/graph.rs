@@ -123,7 +123,9 @@ impl Render for SvgGraph {
                         @let x = left_margin + i * LINE_SPACING;
                         line x1=(x) y1=(top_margin) x2=(x) y2=(y_end) {}
                     }
-                    @for series in &self.series {
+                    @for (series_idx, series) in self.series.iter().enumerate() {
+                        @let dash = if series_idx % 2 == 0 { "none" } else { "5 4" };
+                        @let point_radius = if series_idx % 2 == 0 { 1.2 } else { 1.0 };
                         @let points = series.points.iter().map(|&(x, y)| {
                             let y = self.axis.interpolate(y);
                             (left_margin + (LINE_SPACING * x), y_end as f32 - y)
@@ -137,7 +139,20 @@ impl Render for SvgGraph {
                             }
                             acc
                         };
-                        polyline points=(polyline_points) stroke=(&series.color) fill="none" {}
+                        polyline
+                            points=(polyline_points)
+                            stroke=(&series.color)
+                            stroke-dasharray=(dash)
+                            fill="none"
+                        {}
+                        @for (x, y) in points {
+                            circle
+                                cx=(x)
+                                cy=(y)
+                                r=(point_radius)
+                                fill=(&series.color)
+                            {}
+                        }
                         rect width=(graph_width) height=(graph_height) x=(left_margin) y=(top_margin) fill="transparent"
                             nm-bind={"
                                 onmousemove: (e) => {

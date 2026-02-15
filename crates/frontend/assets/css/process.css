@@ -83,6 +83,8 @@
 .process-table-wrap {
     max-height: clamp(24rem, 66vh, 46rem);
     overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable both-edges;
     border-radius: var(--radius-lg);
 }
 
@@ -98,7 +100,8 @@
 
 .process-table th:nth-child(2),
 .process-table td:nth-child(2) {
-    width: 34%;
+    width: auto;
+    min-width: 14rem;
 }
 
 .process-table th:nth-child(3),
@@ -115,7 +118,15 @@
 
 .process-table th:nth-child(6),
 .process-table td:nth-child(6) {
-    width: 9.2rem;
+    width: 8.6rem;
+}
+
+.process-name {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .process-table.dense th,
@@ -216,7 +227,12 @@
 
 @media (max-width: 760px) {
     .process-table {
-        min-width: 45rem;
+        min-width: 42rem;
+    }
+
+    .process-table th:nth-child(2),
+    .process-table td:nth-child(2) {
+        min-width: 10.5rem;
     }
 
     .process-toolbar {

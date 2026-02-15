@@ -39,15 +39,15 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
 
     Ok(html! {
         header {
-            button
+            button .nav-toggle
                 aria-controls="nav"
                 nm-bind="onclick: () => navOpen = !navOpen, ariaExpanded: () => navOpen"
             {
-                (Icon::new("fa6-solid-bars").size(48))
+                (Icon::new("fa6-solid-bars").size(30))
             }
 
-            label {
-                "Backend: "
+            label .backend-switch {
+                span { "Backend" }
                 select
                     onchange="document.cookie = `backend=${this.value}; MaxAge=999999999`; window.location.reload()"
                 {
@@ -68,15 +68,20 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
                 span .notifier nm-bind="hidden: () => !newMsg" { (Icon::new("fa6-solid-circle").size(12)) }
             }
 
-            span nm-data="isDark: localStorage.getItem('darkMode') === 'true'" {
+            span .theme-switch nm-data="isDark: localStorage.getItem('darkMode') === 'true'" nm-bind="
+                oninit: () => {
+                    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+                }
+            " {
                 meta
                     name="color-scheme"
                     nm-bind="content: () => isDark ? 'dark' : 'light'"
                 {}
-                button nm-bind="
+                button .theme-toggle nm-bind="
                     onclick: () => {
                         isDark = !isDark;
                         localStorage.setItem('darkMode', isDark);
+                        document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
                     }
                 " {
                     span nm-bind="hidden: () => isDark" {
@@ -103,34 +108,36 @@ fn header(req: &ServerRequest) -> Result<Markup, ServerResponse> {
     })
 }
 
-fn nav() -> Markup {
+fn nav(req: &ServerRequest) -> Markup {
+    let current_page = req.path_segments().next().unwrap_or("system");
+
     html! {
         nav #nav {
-            a href="/system" {
+            a href="/system" class=(if current_page == "system" { "active" } else { "" }) aria-current=(if current_page == "system" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-gauge"))
                 "System"
             }
-            a href="/process" {
+            a href="/process" class=(if current_page == "process" { "active" } else { "" }) aria-current=(if current_page == "process" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-microchip"))
                 "Processes"
             }
-            a href="/software" {
+            a href="/software" class=(if current_page == "software" { "active" } else { "" }) aria-current=(if current_page == "software" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-database"))
                 "Software"
             }
-            a href="/service" {
+            a href="/service" class=(if current_page == "service" { "active" } else { "" }) aria-current=(if current_page == "service" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-list"))
                 "Services"
             }
-            a href="/management" {
+            a href="/management" class=(if current_page == "management" { "active" } else { "" }) aria-current=(if current_page == "management" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-user"))
                 "Management"
             }
-            a href="/terminal" {
+            a href="/terminal" class=(if current_page == "terminal" { "active" } else { "" }) aria-current=(if current_page == "terminal" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-terminal"))
                 "Terminal"
             }
-            a href="/browser" {
+            a href="/browser" class=(if current_page == "browser" { "active" } else { "" }) aria-current=(if current_page == "browser" { "page" } else { "false" }) {
                 (Icon::new("fa6-solid-folder"))
                 "File Browser"
             }
@@ -170,14 +177,14 @@ pub fn template(
                     link rel="stylesheet" href="/static/main.css";
                 }
                 body
-                    nm-data="navOpen: true, msgsOpen: false, newMsg: false,"
+                    nm-data="navOpen: window.matchMedia('(min-width: 981px)').matches, msgsOpen: false, newMsg: false,"
                     nm-bind="'class.nav-closed': () => !navOpen, 'class.msgs-open': () => msgsOpen"
                 {
                     h1 { "DietPi Dashboard" }
 
                     (header(req)?)
 
-                    (nav())
+                    (nav(req))
 
                     main nm-data=(persistent_data) {
                         (content)

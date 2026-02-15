@@ -31,14 +31,14 @@ pub fn cpu_meters(cpu_data: &CpuResponse, temp_data: &TempResponse) -> Markup {
         section .{"span-" (span)} {
             h2 { "CPU Statistics" }
             @if let Some(temp) = temp_data.temp {
-                p { "CPU Temperature: " (temp) "ºC" }
+                p { "CPU Temperature: " (format!("{temp:.1}")) "ºC" }
             }
-            p { "Global CPU: " (cpu_data.global_cpu) "%" }
+            p { "Global CPU: " (format!("{:.1}", cpu_data.global_cpu)) "%" }
             .meter-container {
                 .bar.cpu style={"--scale:"(cpu_data.global_cpu / 100.)} {}
             }
             @for (usage, num) in cpu_iter {
-                p { "CPU "(num)": "(usage)"%" }
+                p { "CPU "(num)": " (format!("{usage:.1}")) "%" }
                 .meter-container {
                     .bar.cpu style={"--scale:"(usage / 100.)} {}
                 }
@@ -54,7 +54,7 @@ pub fn cpu_graph(data: &CpuResponse, points: &mut QueryArray) -> Markup {
         .chain(points.iter())
         .take(20);
 
-    graph.add_series(points_iter.clone(), "var(--green-6)", "CPU");
+    graph.add_series(points_iter.clone(), "var(--gray-12)", "CPU");
 
     *points = points_iter.collect();
 
@@ -73,7 +73,7 @@ pub fn temp_graph(data: &TempResponse, points: &mut QueryArray) -> Option<Markup
 
         let points_iter = std::iter::once(temp).chain(points.iter()).take(20);
 
-        graph.add_series(points_iter.clone(), "light-dark(#000, #fff)", "Temperature");
+        graph.add_series(points_iter.clone(), "var(--gray-9)", "Temperature");
 
         *points = points_iter.collect();
 
@@ -130,8 +130,8 @@ pub fn mem_graph(
         .chain(swap_points.iter())
         .take(20);
 
-    graph.add_series(ram_points_iter.clone(), "var(--red-6)", "RAM");
-    graph.add_series(swap_points_iter.clone(), "var(--blue-6)", "Swap");
+    graph.add_series(ram_points_iter.clone(), "var(--gray-11)", "RAM");
+    graph.add_series(swap_points_iter.clone(), "var(--gray-7)", "Swap");
 
     *ram_points = ram_points_iter.collect();
     *swap_points = swap_points_iter.collect();
@@ -179,8 +179,8 @@ pub fn net_graph(
         .chain(recv_points.iter())
         .take(20);
 
-    graph.add_series(sent_points_iter.clone(), "var(--purple-6)", "Sent");
-    graph.add_series(recv_points_iter.clone(), "var(--pink-6)", "Received");
+    graph.add_series(sent_points_iter.clone(), "var(--gray-10)", "Sent");
+    graph.add_series(recv_points_iter.clone(), "var(--gray-6)", "Received");
 
     *sent_points = sent_points_iter.collect();
     *recv_points = recv_points_iter.collect();

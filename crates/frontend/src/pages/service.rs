@@ -21,15 +21,16 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                     th { "Start Time" }
                 }
                 @for service in data.services {
+                    @let (status_attr, status_label) = match service.status {
+                        ServiceStatus::Active => ("active", "Active"),
+                        ServiceStatus::Inactive => ("inactive", "Inactive"),
+                        ServiceStatus::Failed => ("failed", "Failed"),
+                        ServiceStatus::Unknown => ("unknown", "Unknown"),
+                    };
                     tr {
                         td { (service.name) }
                         td {
-                            @match service.status {
-                                ServiceStatus::Active => "active",
-                                ServiceStatus::Inactive => "inactive",
-                                ServiceStatus::Failed => "failed",
-                                ServiceStatus::Unknown => "unknown"
-                            }
+                            span .status-badge data-status=(status_attr) { (status_label) }
                         }
                         td {
                             @if !service.err_log.is_empty() {

@@ -23,8 +23,8 @@ pub enum Axis {
 impl Axis {
     fn format_val(self, val: f32) -> String {
         match self {
-            Self::Percent => format!("{}%", val),
-            Self::Temp => format!("{}ºC", val),
+            Self::Percent => format!("{val:.1}%"),
+            Self::Temp => format!("{val:.1}ºC"),
             Self::Bytes => pretty_bytes(val as u64, Some(0)).to_string(),
         }
     }

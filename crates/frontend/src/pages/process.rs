@@ -50,6 +50,15 @@ fn table_header(name: &str, sort: ColumnSort, query: &ProcessQuery) -> Markup {
     }
 }
 
+fn process_status(status: ProcessStatus) -> (&'static str, &'static str) {
+    match status {
+        ProcessStatus::Running => ("running", "Running"),
+        ProcessStatus::Paused => ("paused", "Paused"),
+        ProcessStatus::Sleeping => ("sleeping", "Sleeping"),
+        ProcessStatus::Other => ("other", "Other"),
+    }
+}
+
 pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> {
     req.check_login()?;
 
@@ -88,27 +97,30 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                 }
                 @for proc in processes {
                     @let pretty_mem = pretty_bytes_binary(proc.mem, Some(0));
+                    @let (status_attr, status_label) = process_status(proc.status);
 
                     tr {
                         td { (proc.pid) }
                         td { (proc.name) }
-                        td { (format!("{:?}", proc.status)) }
-                        td { (proc.cpu) "%" }
+                        td {
+                            span .status-badge data-status=(status_attr) { (status_label) }
+                        }
+                        td { (format!("{:.1}%", proc.cpu)) }
                         td { (pretty_mem) }
                         td nm-data data-pid=(proc.pid) {
                             .actions-cell {
-                                button data-signal="kill" nm-bind="onclick: () => $post('/process/signal')" {
+                                button data-signal="kill" title="Kill process" aria-label="Kill process" nm-bind="onclick: () => $post('/process/signal')" {
                                     (Icon::new("fa6-solid-skull"))
                                 }
-                                button data-signal="term" nm-bind="onclick: () => $post('/process/signal')" {
+                                button data-signal="term" title="Terminate process" aria-label="Terminate process" nm-bind="onclick: () => $post('/process/signal')" {
                                     (Icon::new("fa6-solid-ban"))
                                 }
                                 @if proc.status == ProcessStatus::Paused {
-                                    button data-signal="resume" nm-bind="onclick: () => $post('/process/signal')" {
+                                    button data-signal="resume" title="Resume process" aria-label="Resume process" nm-bind="onclick: () => $post('/process/signal')" {
                                         (Icon::new("fa6-solid-play"))
                                     }
                                 } @else {
-                                    button data-signal="pause" nm-bind="onclick: () => $post('/process/signal')" {
+                                    button data-signal="pause" title="Pause process" aria-label="Pause process" nm-bind="onclick: () => $post('/process/signal')" {
                                         (Icon::new("fa6-solid-pause"))
                                     }
                                 }

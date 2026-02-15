@@ -1,20 +1,78 @@
+#process-swap {
+    overflow-x: auto;
+}
+
 .process-table {
-    th button {
-        width: 100%;
+    min-width: 52rem;
+}
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+.process-table th button {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    padding: 0.1rem 0;
+    border: none;
+    border-radius: 0;
+    color: inherit;
+    font-weight: var(--font-weight-semibold);
+}
 
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
+.process-table th button svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    opacity: 0.85;
+}
+
+.process-table td .actions-cell {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.process-table td .actions-cell button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--surface-muted) 85%, transparent);
+    color: var(--text-secondary);
+}
+
+.process-table td .actions-cell button:hover {
+    background: var(--surface-panel);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+.process-table td .actions-cell button[data-signal="kill"] {
+    border-color: color-mix(in srgb, var(--red-6) 35%, var(--border-subtle));
+    color: var(--red-6);
+}
+
+.process-table td .actions-cell button[data-signal="kill"]:hover {
+    background: color-mix(in srgb, var(--red-6) 12%, transparent);
+}
+
+.process-table td .actions-cell button[data-signal="term"] {
+    border-color: color-mix(in srgb, var(--red-6) 25%, var(--border-subtle));
+}
+
+@media (max-width: 760px) {
+    .process-table {
+        min-width: 45rem;
     }
 
-    .actions-cell {
-        display: flex;
-        gap: var(--size-2);
+    .process-table td .actions-cell {
+        gap: 0.32rem;
+    }
 
-        width: 100%;
+    .process-table td .actions-cell button {
+        width: 1.82rem;
+        height: 1.82rem;
     }
 }

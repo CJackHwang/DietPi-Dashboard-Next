@@ -48,7 +48,7 @@ fn process_link(query: &ProcessQuery, page: usize, per_page: usize) -> String {
     format!("/process?{query}")
 }
 
-fn table_header(name: &str, sort: ColumnSort, query: &ProcessQuery) -> Markup {
+fn table_header(name: &str, i18n_key: &str, sort: ColumnSort, query: &ProcessQuery) -> Markup {
     let reverse = if query.sort == sort {
         !query.reverse
     } else {
@@ -64,7 +64,7 @@ fn table_header(name: &str, sort: ColumnSort, query: &ProcessQuery) -> Markup {
     html! {
         th {
             a .sort-link href=(href) {
-                (name)
+                span data-i18n=(i18n_key) { (name) }
                 @if query.sort == sort {
                     @if query.reverse {
                         (Icon::new("fa6-solid-sort-down"))
@@ -77,12 +77,12 @@ fn table_header(name: &str, sort: ColumnSort, query: &ProcessQuery) -> Markup {
     }
 }
 
-fn process_status(status: ProcessStatus) -> (&'static str, &'static str) {
+fn process_status(status: ProcessStatus) -> (&'static str, &'static str, &'static str) {
     match status {
-        ProcessStatus::Running => ("running", "Running"),
-        ProcessStatus::Paused => ("paused", "Paused"),
-        ProcessStatus::Sleeping => ("sleeping", "Sleeping"),
-        ProcessStatus::Other => ("other", "Other"),
+        ProcessStatus::Running => ("running", "Running", "running"),
+        ProcessStatus::Paused => ("paused", "Paused", "paused"),
+        ProcessStatus::Sleeping => ("sleeping", "Sleeping", "sleeping"),
+        ProcessStatus::Other => ("other", "Other", "other"),
     }
 }
 
@@ -133,10 +133,10 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
             nm-data="denseRows: localStorage.getItem('processDenseRows') === 'true'"
             nm-bind="oninit: () => $debounce(() => $get(window.location.pathname + window.location.search), 2000)"
         {
-            h2 { "Processes" }
+            h2 data-i18n="processes_title" { "Processes" }
 
             .process-toolbar {
-                p .process-summary {
+                p .process-summary data-i18n-template="process_summary" data-start=(shown_start) data-end=(end_idx) data-total=(total_items) {
                     "Showing " (shown_start) "-" (end_idx) " of " (total_items) " processes"
                 }
 
@@ -150,13 +150,13 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
                             }
                         "
                     {
-                        "Rows: "
-                        span nm-bind="hidden: () => denseRows" { "Comfortable" }
-                        span nm-bind="hidden: () => !denseRows" { "Compact" }
+                        span data-i18n="rows" { "Rows" } ": "
+                        span data-i18n="rows_comfortable" nm-bind="hidden: () => denseRows" { "Comfortable" }
+                        span data-i18n="rows_compact" nm-bind="hidden: () => !denseRows" { "Compact" }
                     }
 
                     .process-page-size {
-                        span { "Per Page" }
+                        span data-i18n="per_page" { "Per Page" }
                         @for page_size in [15_usize, 25, 50, 100] {
                             @let size_link = process_link(&query, 1, page_size);
                             a .page-size-link
@@ -184,45 +184,45 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
             " {
                 table .process-table nm-bind="'class.dense': () => denseRows" {
                     tr {
-                        (table_header("PID", ColumnSort::Pid, &query))
-                        (table_header("Name", ColumnSort::Name, &query))
-                        (table_header("Status", ColumnSort::Status, &query))
-                        (table_header("CPU Usage", ColumnSort::Cpu, &query))
-                        (table_header("RAM Usage", ColumnSort::Ram, &query))
-                        th { "Actions" }
+                        (table_header("PID", "pid", ColumnSort::Pid, &query))
+                        (table_header("Name", "name", ColumnSort::Name, &query))
+                        (table_header("Status", "status", ColumnSort::Status, &query))
+                        (table_header("CPU Usage", "cpu_usage", ColumnSort::Cpu, &query))
+                        (table_header("RAM Usage", "ram_usage", ColumnSort::Ram, &query))
+                        th data-i18n="actions" { "Actions" }
                     }
                     @if page_items.is_empty() {
                         tr {
-                            td colspan="6" { "No process data available" }
+                            td colspan="6" data-i18n="no_process_data" { "No process data available" }
                         }
                     } @else {
                         @for proc in page_items {
                             @let pretty_mem = pretty_bytes_binary(proc.mem, Some(0));
-                            @let (status_attr, status_label) = process_status(proc.status);
+                            @let (status_attr, status_label, status_i18n) = process_status(proc.status);
 
                             tr {
                                 @let proc_name = proc.name.as_str();
                                 td { (proc.pid) }
                                 td { span .process-name title=(proc_name) { (proc_name) } }
                                 td {
-                                    span .status-badge data-status=(status_attr) { (status_label) }
+                                    span .status-badge data-status=(status_attr) data-i18n=(status_i18n) { (status_label) }
                                 }
                                 td { (format!("{:.1}%", proc.cpu)) }
                                 td { (pretty_mem) }
                                 td nm-data data-pid=(proc.pid) {
                                     .actions-cell {
-                                        button data-signal="kill" title="Kill process" aria-label="Kill process" nm-bind="onclick: () => $post('/process/signal')" {
+                                        button data-signal="kill" title="Kill process" aria-label="Kill process" data-i18n-title="kill_process" data-i18n-aria-label="kill_process" nm-bind="onclick: () => $post('/process/signal')" {
                                             (Icon::new("fa6-solid-skull"))
                                         }
-                                        button data-signal="term" title="Terminate process" aria-label="Terminate process" nm-bind="onclick: () => $post('/process/signal')" {
+                                        button data-signal="term" title="Terminate process" aria-label="Terminate process" data-i18n-title="terminate_process" data-i18n-aria-label="terminate_process" nm-bind="onclick: () => $post('/process/signal')" {
                                             (Icon::new("fa6-solid-ban"))
                                         }
                                         @if proc.status == ProcessStatus::Paused {
-                                            button data-signal="resume" title="Resume process" aria-label="Resume process" nm-bind="onclick: () => $post('/process/signal')" {
+                                            button data-signal="resume" title="Resume process" aria-label="Resume process" data-i18n-title="resume_process" data-i18n-aria-label="resume_process" nm-bind="onclick: () => $post('/process/signal')" {
                                                 (Icon::new("fa6-solid-play"))
                                             }
                                         } @else {
-                                            button data-signal="pause" title="Pause process" aria-label="Pause process" nm-bind="onclick: () => $post('/process/signal')" {
+                                            button data-signal="pause" title="Pause process" aria-label="Pause process" data-i18n-title="pause_process" data-i18n-aria-label="pause_process" nm-bind="onclick: () => $post('/process/signal')" {
                                                 (Icon::new("fa6-solid-pause"))
                                             }
                                         }
@@ -235,11 +235,11 @@ pub async fn page(req: ServerRequest) -> Result<ServerResponse, ServerResponse> 
             }
 
             .process-pagination {
-                a .pager-btn class=(if query.page == 1 { "disabled" } else { "" }) href=(first_link) aria-disabled=(if query.page == 1 { "true" } else { "false" }) { "First" }
-                a .pager-btn class=(if query.page == 1 { "disabled" } else { "" }) href=(prev_link) aria-disabled=(if query.page == 1 { "true" } else { "false" }) { "Prev" }
-                p .pager-info { "Page " (query.page) " / " (total_pages) }
-                a .pager-btn class=(if query.page == total_pages { "disabled" } else { "" }) href=(next_link) aria-disabled=(if query.page == total_pages { "true" } else { "false" }) { "Next" }
-                a .pager-btn class=(if query.page == total_pages { "disabled" } else { "" }) href=(last_link) aria-disabled=(if query.page == total_pages { "true" } else { "false" }) { "Last" }
+                a .pager-btn class=(if query.page == 1 { "disabled" } else { "" }) href=(first_link) aria-disabled=(if query.page == 1 { "true" } else { "false" }) data-i18n="first" { "First" }
+                a .pager-btn class=(if query.page == 1 { "disabled" } else { "" }) href=(prev_link) aria-disabled=(if query.page == 1 { "true" } else { "false" }) data-i18n="prev" { "Prev" }
+                p .pager-info data-i18n-template="page_of" data-page=(query.page) data-total-pages=(total_pages) { "Page " (query.page) " / " (total_pages) }
+                a .pager-btn class=(if query.page == total_pages { "disabled" } else { "" }) href=(next_link) aria-disabled=(if query.page == total_pages { "true" } else { "false" }) data-i18n="next" { "Next" }
+                a .pager-btn class=(if query.page == total_pages { "disabled" } else { "" }) href=(last_link) aria-disabled=(if query.page == total_pages { "true" } else { "false" }) data-i18n="last" { "Last" }
             }
         }
     };

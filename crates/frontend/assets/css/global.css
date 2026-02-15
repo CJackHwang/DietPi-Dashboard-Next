@@ -94,6 +94,7 @@ header {
 }
 
 header .nav-toggle,
+header .lang-toggle,
 header .msg-btn,
 header .theme-toggle {
     display: inline-flex;
@@ -108,6 +109,7 @@ header .theme-toggle {
 }
 
 header .nav-toggle:hover,
+header .lang-toggle:hover,
 header .msg-btn:hover,
 header .theme-toggle:hover {
     background: var(--surface-panel);
@@ -153,6 +155,13 @@ header select {
 
 header .theme-switch {
     display: inline-flex;
+}
+
+header .lang-toggle {
+    font-size: var(--font-size-00);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.04em;
+    font-family: var(--font-monospace-code);
 }
 
 header .msg-btn {
@@ -262,6 +271,7 @@ footer {
     align-items: center;
     justify-content: center;
     gap: var(--size-2);
+    flex-wrap: wrap;
     padding: 0.95rem 1.2rem;
 
     border-top: 1px solid var(--border-subtle);
@@ -274,6 +284,32 @@ footer {
 footer a {
     color: inherit;
     border-radius: var(--radius-full);
+}
+
+footer .footer-meta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.45rem;
+    min-width: 0;
+}
+
+footer .footer-sep {
+    opacity: 0.55;
+}
+
+footer .footer-repo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+}
+
+footer .footer-repo svg {
+    width: 1.7rem;
+    height: 1.7rem;
 }
 
 footer a:hover {
@@ -696,6 +732,7 @@ body.msgs-open #msgs {
 
 @media (max-width: 640px) {
     header .nav-toggle,
+    header .lang-toggle,
     header .msg-btn,
     header .theme-toggle {
         width: 2.45rem;
@@ -711,7 +748,28 @@ body.msgs-open #msgs {
     }
 
     footer {
-        flex-direction: column;
+        gap: 0.2rem 0.42rem;
+        padding: 0.56rem 0.75rem;
+        line-height: 1.35;
+    }
+
+    footer .footer-meta {
+        font-size: var(--font-size-00);
+        gap: 0.1rem 0.35rem;
+    }
+
+    footer .footer-sep {
+        display: none;
+    }
+
+    footer .footer-repo {
+        width: 1.6rem;
+        height: 1.6rem;
+    }
+
+    footer .footer-repo svg {
+        width: 1.4rem;
+        height: 1.4rem;
     }
 
     table {

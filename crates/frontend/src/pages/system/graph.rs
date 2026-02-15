@@ -11,6 +11,7 @@ pub struct GraphSeries {
     points: Vec<(u32, f32)>,
     color: &'static str,
     label: &'static str,
+    i18n_key: &'static str,
 }
 
 #[derive(Clone, Copy)]
@@ -79,6 +80,7 @@ impl SvgGraph {
         points: impl Iterator<Item = f32>,
         color: &'static str,
         label: &'static str,
+        i18n_key: &'static str,
     ) {
         // Creates (x, y) pairs starting from the right
         let points: Vec<_> = (0..GRAPH_X_LINES).rev().zip(points).collect();
@@ -87,6 +89,7 @@ impl SvgGraph {
             points,
             color,
             label,
+            i18n_key,
         };
 
         self.series.push(series);
@@ -123,9 +126,7 @@ impl Render for SvgGraph {
                         @let x = left_margin + i * LINE_SPACING;
                         line x1=(x) y1=(top_margin) x2=(x) y2=(y_end) {}
                     }
-                    @for (series_idx, series) in self.series.iter().enumerate() {
-                        @let dash = if series_idx % 2 == 0 { "none" } else { "5 4" };
-                        @let point_radius = if series_idx % 2 == 0 { 1.2 } else { 1.0 };
+                    @for series in &self.series {
                         @let points = series.points.iter().map(|&(x, y)| {
                             let y = self.axis.interpolate(y);
                             (left_margin + (LINE_SPACING * x), y_end as f32 - y)
@@ -142,17 +143,8 @@ impl Render for SvgGraph {
                         polyline
                             points=(polyline_points)
                             stroke=(&series.color)
-                            stroke-dasharray=(dash)
                             fill="none"
                         {}
-                        @for (x, y) in points {
-                            circle
-                                cx=(x)
-                                cy=(y)
-                                r=(point_radius)
-                                fill=(&series.color)
-                            {}
-                        }
                         rect width=(graph_width) height=(graph_height) x=(left_margin) y=(top_margin) fill="transparent"
                             nm-bind={"
                                 onmousemove: (e) => {
@@ -182,7 +174,7 @@ impl Render for SvgGraph {
                     };
                     p {
                         span style={"color:"(series.color)} { (Icon::new("fa6-solid-square").size(16)) }
-                        (series.label)
+                        span data-i18n=(series.i18n_key) { (series.label) }
                         span nm-bind={"textContent: () => ["(point_vals)"][idx]"} {}
                     }
                 }

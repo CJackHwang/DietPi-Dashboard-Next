@@ -1,11 +1,23 @@
 name: Build
-on: push
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   fmt_clippy:
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Install minify
@@ -20,6 +32,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         job:
           - { target: x86_64-unknown-linux-gnu, pretty: x86_64 }
@@ -28,12 +41,12 @@ jobs:
           - { target: aarch64-unknown-linux-gnu, pretty: aarch64 }
           - { target: riscv64gc-unknown-linux-gnu, pretty: riscv64 }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.job.pretty }}-${{ steps.toolchain.outputs.cachekey }}
+          key: dietpi-dashboard-${{ matrix.job.pretty }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cross
@@ -43,13 +56,28 @@ jobs:
         run: ./scripts/build-assets.bash
       - name: Build DietPi-Dashboard
         run: cross build --release --target ${{ matrix.job.target }}
-      - name: Upload frontend binary
-        uses: actions/upload-artifact@v6
+      - name: Package binaries
+        run: |
+          set -euo pipefail
+          out_dir="dist/${{ matrix.job.pretty }}"
+          mkdir -p "$out_dir"
+          install -m 755 "target/${{ matrix.job.target }}/release/frontend" "$out_dir/frontend"
+          install -m 755 "target/${{ matrix.job.target }}/release/backend" "$out_dir/backend"
+          tar -C "$out_dir" -czf "dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz" frontend backend
+          sha256sum "dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz" > "dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz.sha256"
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: dietpi-dashboard-${{ matrix.job.pretty }}-frontend
-          path: target/${{ matrix.job.target }}/release/frontend
-      - name: Upload backend binary
-        uses: actions/upload-artifact@v6
+          name: dietpi-dashboard-${{ matrix.job.pretty }}
+          path: |
+            dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz
+            dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz.sha256
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
-          name: dietpi-dashboard-${{ matrix.job.pretty }}-backend
-          path: target/${{ matrix.job.target }}/release/backend
+          tag_name: ${{ github.event.release.tag_name }}
+          fail_on_unmatched_files: true
+          files: |
+            dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz
+            dietpi-dashboard-${{ matrix.job.pretty }}.tar.gz.sha256

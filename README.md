@@ -1,51 +1,62 @@
-# DietPi-Dashboard
-A web dashboard for DietPi
+# DietPi-Dashboard (CJackHwang Downstream)
+
+A downstream fork of DietPi-Dashboard focused on UX improvements and ongoing maintenance.
+
+## Upstream Relationship
+
+- Upstream project: [nonnorm/DietPi-Dashboard](https://github.com/nonnorm/DietPi-Dashboard)
+- This repository: [CJackHwang/DietPi-Dashboard](https://github.com/CJackHwang/DietPi-Dashboard)
 
 ## Installation
-To install, use one of the [precompiled releases](#release), [nightly builds](#nightly) or [compile it yourself](#compiling)
 
-### Downloading
-#### Release:
+Use one of the precompiled releases, or compile from source.
 
-```sh
-curl -fL "$(curl -sSf 'https://api.github.com/repos/nonnorm/DietPi-Dashboard/releases/latest' | mawk -F\" "/\"browser_download_url\": \".*dietpi-dashboard-$G_HW_ARCH_NAME\"/{print \$4}")" -o dietpi-dashboard # Download latest binary for current architecture
-chmod +x dietpi-dashboard # Make binary executable
-./dietpi-dashboard # Run binary
-```
+### Release (Recommended)
 
-#### Nightly:
+This fork publishes two binaries: `frontend` and `backend`.
 
 ```sh
-curl -fL "https://nightly.link/ravenclaw900/DietPi-Dashboard/workflows/push-build/main/dietpi-dashboard-$G_HW_ARCH_NAME.zip" -o dietpi-dashboard.zip # Download latest nightly build for current architecture
-unzip dietpi-dashboard.zip # Unzip binary
-rm dietpi-dashboard.zip # Remove archive
-chmod +x dietpi-dashboard # Make binary executable
-./dietpi-dashboard # Run binary
+ARCH="${G_HW_ARCH_NAME:-x86_64}"
+ASSET="dietpi-dashboard-${ARCH}.tar.gz"
+URL="$(curl -sSf https://api.github.com/repos/CJackHwang/DietPi-Dashboard/releases/latest \
+  | mawk -F\" "/\"browser_download_url\": \".*dietpi-dashboard-${ARCH}\\.tar\\.gz\"/{print \\$4; exit}")"
+
+curl -fL "$URL" -o "$ASSET"
+tar -xzf "$ASSET"
+chmod +x frontend backend
+./frontend &
+./backend
 ```
 
+### Compile From Source
 
-### Compiling
-#### Prereq:
+#### Prerequisites
 
 ```sh
-dietpi-software install 9 16 17 # Install Node.js (webpage), Build-Essential (gcc), and Git (git clone), respectively
-corepack enable # Enable pnpm package manager, for node dependencies
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh # Install Rust (backend)
-source ~/.cargo/env # Update $PATH
-cargo install just # Install just command runner, for build file
+dietpi-software install 9 16 17 # Node.js, Build-Essential, Git
+corepack enable
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+cargo install just
 ```
 
-#### Compiling:
+#### Build and Run
 
 ```sh
-git clone https://github.com/nonnorm/DietPi-Dashboard # Download source code
-cd DietPi-Dashboard # Change directories
-cargo build --release # Compile binary for your platform
-./target/release/dietpi-dashboard # Run binary
+git clone https://github.com/CJackHwang/DietPi-Dashboard
+cd DietPi-Dashboard
+cargo build --release -p frontend -p backend
+./target/release/frontend &
+./target/release/backend
 ```
 
-Note that there will be a difference between self-compiled binaries and the nightly/release builds. The nightly/release builds are statically linked with the musl libc implementation, while self-compiled binaries will be dynamically linked with glibc. This should not affect functionality in any way.
+## Open Dashboard
 
-### Open dashboard:
-`http://<your.IP>:5252`
+`http://<your-ip>:5252`
 
+## CI / Release Automation
+
+Workflow: `.github/workflows/push-build.yml`
+
+- Push to `main`: runs lint + cross builds and uploads CI artifacts.
+- Publish a GitHub Release: automatically cross-builds all targets and uploads release assets (`.tar.gz` + `.sha256`) to that release.
